@@ -6,8 +6,9 @@ import 'package:flutter_omarchy/src/theme/text.dart';
 import 'package:flutter_omarchy/src/theme/theme.dart';
 
 class Omarchy extends StatefulWidget {
-  const Omarchy({super.key, required this.child});
+  const Omarchy({super.key, required this.child, this.theme});
   final Widget child;
+  final OmarchyThemeData? theme;
 
   static Future<void> initialize() async {
     final config = OmarchyConfigData.read();
@@ -27,10 +28,9 @@ class Omarchy extends StatefulWidget {
 
 class _OmarchyState extends State<Omarchy> {
   late OmarchyData _data;
-  late final StreamSubscription<OmarchyConfigData> configSubscription;
-  @override
-  void initState() {
-    super.initState();
+  StreamSubscription<OmarchyConfigData>? configSubscription;
+
+  void startObservingThemeFromConfig() {
     final config = OmarchyConfigData.read();
     _data = OmarchyData(
       theme: OmarchyThemeData.fromConfig(config),
@@ -39,10 +39,34 @@ class _OmarchyState extends State<Omarchy> {
     configSubscription = OmarchyConfigData.watch().listen(_onConfigChange);
   }
 
+  void stopObservingThemeFromConfig() {
+    configSubscription?.cancel();
+    configSubscription = null;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    startObservingThemeFromConfig();
+  }
+
   @override
   void dispose() {
-    configSubscription.cancel();
+    stopObservingThemeFromConfig();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant Omarchy oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.theme != oldWidget.theme) {
+      if (widget.theme != null) {
+        stopObservingThemeFromConfig();
+        _data = OmarchyData(theme: widget.theme!, config: _data.config);
+      } else {
+        startObservingThemeFromConfig();
+      }
+    }
   }
 
   void _onConfigChange(OmarchyConfigData config) async {

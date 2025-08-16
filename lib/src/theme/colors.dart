@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_omarchy/src/config/config.dart';
+import 'package:flutter_omarchy/src/theme/fallback.dart';
 
 class OmarchyColorThemeData {
   const OmarchyColorThemeData({
@@ -14,7 +15,7 @@ class OmarchyColorThemeData {
   factory OmarchyColorThemeData.fromConfig(OmarchyConfigData config) {
     final alacritty = config.alacritty;
     if (alacritty == null) {
-      return const OmarchyColorThemeData.tokyoNight();
+      return OmarchyColorThemes.tokyoNight;
     }
 
     final primary = alacritty.values['colors']['primary'];
@@ -32,14 +33,6 @@ class OmarchyColorThemeData {
       bright: bright,
     );
   }
-
-  const OmarchyColorThemeData.tokyoNight()
-    : background = const Color(0xFF1a1b26),
-      foreground = const Color(0xFFa9b1d6),
-      border = const Color(0xFF33ccff),
-      selectedText = const Color(0xFF7dcfff),
-      normal = const OmarchyAnsiColorThemeData.tokyoNightNormal(),
-      bright = const OmarchyAnsiColorThemeData.tokyoNightBright();
 
   final Color background;
   final Color foreground;
@@ -75,25 +68,6 @@ class OmarchyAnsiColorThemeData {
       green: _color(config['green']),
     );
   }
-  const OmarchyAnsiColorThemeData.tokyoNightNormal()
-    : black = const Color(0xFF32344a),
-      white = const Color(0xFF787c99),
-      red = const Color(0xFFf7768e),
-      green = const Color(0xFF9ece6a),
-      yellow = const Color(0xFFe0af68),
-      blue = const Color(0xFF7aa2f7),
-      magenta = const Color(0xFFad8ee6),
-      cyan = const Color(0xFF449dab);
-
-  const OmarchyAnsiColorThemeData.tokyoNightBright()
-    : black = const Color(0xFF444b6a),
-      white = const Color(0xFFacb0d0),
-      red = const Color(0xFFff7a93),
-      green = const Color(0xFFb9f27c),
-      yellow = const Color(0xFFff9e64),
-      blue = const Color(0xFF7da6ff),
-      magenta = const Color(0xFFbb9af7),
-      cyan = const Color(0xFF0db9d7);
 
   final Color black;
   final Color white;

@@ -11,6 +11,13 @@ class OmarchyThemeData {
   static OmarchyThemeData fromConfig(OmarchyConfigData config) {
     final colors = OmarchyColorThemeData.fromConfig(config);
     final text = OmarchyTextStyleData.fromConfig(config);
-    return OmarchyThemeData(colors: colors, text: text);
+    return OmarchyThemeData(
+      colors: colors,
+      text: OmarchyTextStyleData(
+        bold: text.bold.copyWith(color: colors.foreground),
+        normal: text.normal.copyWith(color: colors.foreground),
+        italic: text.italic.copyWith(color: colors.foreground),
+      ),
+    );
   }
 }

@@ -26,3 +26,5 @@ flutter:
          weight: 400
        - asset: lib/fonts/CaskaydiaMonoNerdFont-Bold.ttf
          weight: 700
+       - asset: lib/fonts/CaskaydiaMonoNerdFont-Italic.ttf
+         style: italic

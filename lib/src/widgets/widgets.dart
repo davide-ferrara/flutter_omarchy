@@ -1,8 +1,11 @@
 export 'button.dart';
 export 'scaffold.dart';
+export 'loader.dart';
 export 'logo.dart';
 export 'navigation_bar.dart';
 export 'status_bar.dart';
+export 'divider.dart';
+export 'pop_over.dart';
 export 'tabs.dart';
 export 'tile.dart';
 export 'icon.dart';
