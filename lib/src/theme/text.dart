@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_omarchy/src/config/config.dart';
@@ -10,23 +11,38 @@ class OmarchyTextStyleData {
   final TextStyle normal;
 
   factory OmarchyTextStyleData.fromConfig(OmarchyConfigData config) {
-    final font = config.alacritty.values['font'];
+    final alacritty = config.alacritty;
+    if (alacritty == null) {
+      return OmarchyTextStyleData.fallback();
+    }
+    final font = alacritty.values['font'];
     return OmarchyTextStyleData(normal: _textStyle(font['normal']));
   }
 
+  const OmarchyTextStyleData.fallback()
+    : normal = const TextStyle(
+        fontSize: 14,
+        fontFamily: 'CaskaydiaMono Nerd Font',
+        fontWeight: FontWeight.bold,
+        decoration: TextDecoration.none,
+        package: 'flutter_omarchy',
+      );
+
   Future<void> loadFonts() {
+    if (kIsWeb || !Platform.isLinux) return Future.value();
     return OmarchyFonts.instance.load({normal.fontFamily!});
   }
 }
 
 TextStyle _textStyle(Map<String, dynamic> map) {
   return TextStyle(
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: map['family'],
     fontWeight: switch (map['style']) {
       'Bold' => FontWeight.bold,
       _ => FontWeight.normal,
     },
+    fontFamilyFallback: ['CaskaydiaMono Nerd Font'],
     decoration: TextDecoration.none,
   );
 }
@@ -51,9 +67,6 @@ class OmarchyFonts {
           final file = parts[0];
           final family = parts[1].split(',').first;
           final style = parts[2];
-
-          print('$family $style $file');
-
           final systemFont = systemFonts.putIfAbsent(
             family,
             () => OmarchyFont(name: family, styles: []),
@@ -67,7 +80,6 @@ class OmarchyFonts {
           );
         }
       }
-      print('Listed ${systemFonts.length} fonts');
       _initialized = true;
     }
   }
@@ -75,9 +87,7 @@ class OmarchyFonts {
   Future<void> load(Set<String> families) async {
     await _initialize();
     for (var family in families) {
-      print('Family $family');
       final systemFont = systemFonts[family];
-      print(systemFont);
       if (systemFont != null && !systemFont.isLoaded) {
         await systemFont.load();
       }
@@ -99,9 +109,7 @@ class OmarchyFont {
     final loader = FontLoader(name);
     for (var style in styles) {
       final file = File(style.file);
-      print('Load $file');
       if (file.existsSync()) {
-        print('Exists $file');
         loader.addFont(
           file.readAsBytes().then((bytes) => ByteData.sublistView(bytes)),
         );

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
 
 class GalleryApp extends StatelessWidget {
@@ -20,26 +21,25 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late Widget selected = sections.first.$2;
+  late Widget selected = sections.last.$2;
 
-  List<(String, Widget)> sections = [('Theme', const ThemePage())];
+  List<(String, Widget)> sections = [
+    ('Theme', const ThemePage()),
+    ('Widgets', const WidgetsPage()),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return OmarchyScaffold(
-      child: Row(
-        children: [
-          Menu(
-            sections: sections,
-            onSectionSelected: (value) {
-              setState(() {
-                selected = value;
-              });
-            },
-          ),
-          Expanded(child: selected),
-        ],
+      leadingMenu: Menu(
+        sections: sections,
+        onSectionSelected: (value) {
+          setState(() {
+            selected = value;
+          });
+        },
       ),
+      child: selected,
     );
   }
 }
@@ -127,9 +127,104 @@ class Colors extends StatelessWidget {
             runSpacing: 8,
             children: [
               for (var (name, color) in group)
-                Container(width: 20, height: 20, color: color),
+                Tooltip(
+                  message: name,
+                  child: Container(width: 20, height: 20, color: color),
+                ),
             ],
           ),
+      ],
+    );
+  }
+}
+
+class WidgetsPage extends StatelessWidget {
+  const WidgetsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final omarchy = Omarchy.of(context);
+    return ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        Text('Logo'),
+        const SizedBox(height: 12),
+        Align(alignment: Alignment.topLeft, child: OmarchyLogo(width: 200)),
+        const SizedBox(height: 24),
+        Text('Button'),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            for (var color in AnsiColor.values)
+              OmarchyButton(
+                style: OmarchyButtonStyle.primary(color),
+                child: Text('Click me!'),
+                onPressed: () {},
+              ),
+            for (var color in AnsiColor.values)
+              OmarchyButton(
+                style: OmarchyButtonStyle.primary(color),
+                child: Icon(OmarchyIcons.dev.facebook),
+                onPressed: () {},
+              ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Text('Scaffold'),
+        const SizedBox(height: 12),
+        Container(
+          width: 400,
+          height: 320,
+          decoration: BoxDecoration(
+            border: Border.all(color: omarchy.theme.colors.normal.black),
+          ),
+          child: OmarchyScaffold(
+            leadingMenu: Center(child: Text('Leading Menu')),
+            status: OmarchyStatusBar(
+              leading: [OmarchyStatus(child: Text('Status'))],
+            ),
+            child: Center(child: Text('Content')),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text('StatusBar'),
+        const SizedBox(height: 12),
+        OmarchyStatusBar(
+          leading: [
+            for (var accent in AnsiColor.values)
+              OmarchyStatus(
+                accent: accent,
+                child: Text(accent.name.toUpperCase()),
+              ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Text('Tabs'),
+        const SizedBox(height: 12),
+        OmarchyTabs(
+          children: [
+            OmarchyTab.closable(
+              title: Text('first.dart'),
+              onTap: () {},
+              onClose: () {},
+            ),
+            OmarchyTab.closable(
+              icon: Icon(Icons.file_copy),
+              title: Text('example.dart'),
+              onTap: () {},
+              onClose: () {},
+              isActive: true,
+            ),
+            for (var i = 0; i < 25; i++)
+              OmarchyTab.closable(
+                title: Text('example_$i.dart'),
+                onTap: () {},
+                onClose: () {},
+              ),
+          ],
+        ),
       ],
     );
   }

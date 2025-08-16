@@ -6,7 +6,9 @@ class AlacrittyConfig {
   const AlacrittyConfig(this.values);
   final Map<String, dynamic> values;
 
-  static AlacrittyConfig read() {
+  static AlacrittyConfig? read() {
+    if (!file.existsSync()) return null;
+
     final config = file.readAsStringSync();
     final toml = TomlDocument.parse(config);
     final map = toml.toMap();
