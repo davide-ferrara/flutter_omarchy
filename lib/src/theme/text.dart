@@ -7,8 +7,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_omarchy/src/config/config.dart';
 
 class OmarchyTextStyleData {
-  const OmarchyTextStyleData({required this.normal});
+  const OmarchyTextStyleData({required this.bold, required this.normal});
   final TextStyle normal;
+  final TextStyle bold;
 
   factory OmarchyTextStyleData.fromConfig(OmarchyConfigData config) {
     final alacritty = config.alacritty;
@@ -16,11 +17,19 @@ class OmarchyTextStyleData {
       return OmarchyTextStyleData.fallback();
     }
     final font = alacritty.values['font'];
-    return OmarchyTextStyleData(normal: _textStyle(font['normal']));
+    final normal = _textStyle(font['normal']);
+    return OmarchyTextStyleData(normal: normal, bold: _textStyle(font['bold']));
   }
 
   const OmarchyTextStyleData.fallback()
     : normal = const TextStyle(
+        fontSize: 14,
+        fontFamily: 'CaskaydiaMono Nerd Font',
+        fontWeight: FontWeight.normal,
+        decoration: TextDecoration.none,
+        package: 'flutter_omarchy',
+      ),
+      bold = const TextStyle(
         fontSize: 14,
         fontFamily: 'CaskaydiaMono Nerd Font',
         fontWeight: FontWeight.bold,

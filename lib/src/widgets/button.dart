@@ -60,7 +60,7 @@ class PrimaryOmarchyButtonStyle extends OmarchyButtonStyle {
         ),
         pressed: (
           border: bright,
-          background: normal.withValues(alpha: 0.3),
+          background: normal.withValues(alpha: 0.25),
           foreground: bright,
         ),
         focused: (
@@ -70,7 +70,7 @@ class PrimaryOmarchyButtonStyle extends OmarchyButtonStyle {
         ),
         hovering: (
           border: normal,
-          background: normal.withValues(alpha: 0.2),
+          background: normal.withValues(alpha: 0.15),
           foreground: bright,
         ),
         disabled: (

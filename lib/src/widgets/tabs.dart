@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_omarchy/src/omarchy.dart';
 import 'package:flutter_omarchy/src/widgets/utils/default_foreground.dart';
 import 'package:flutter_omarchy/src/widgets/utils/default_padding.dart';
 import 'package:flutter_omarchy/src/widgets/utils/pointer_area.dart';
+import 'package:flutter_omarchy/src/widgets/utils/selected.dart';
 
 class OmarchyTabs extends StatelessWidget {
   const OmarchyTabs({
@@ -81,30 +81,33 @@ class OmarchyTab extends StatelessWidget {
         ],
       );
     }
-    return PointerArea(
-      onTap: onTap,
-      child: child,
-      builder: (context, state, child) {
-        final background = switch (state) {
-          PointerState(isHovering: true) when isActive =>
-            omarchy.theme.colors.background,
-          PointerState(isHovering: true) => omarchy.theme.colors.bright.black,
-          _ when isActive => omarchy.theme.colors.background,
-          _ => omarchy.theme.colors.normal.black,
-        };
-        final foreground = switch (state) {
-          PointerState(isHovering: true) when isActive =>
-            omarchy.theme.colors.foreground,
-          PointerState(isHovering: true) => omarchy.theme.colors.bright.white,
-          _ when isActive => omarchy.theme.colors.foreground,
-          _ => omarchy.theme.colors.normal.white,
-        };
-        return Container(
-          decoration: BoxDecoration(color: background),
-          padding: DefaultPadding.of(context),
-          child: DefaultForeground(foreground: foreground, child: child!),
-        );
-      },
+    return IsSelected(
+      isSelected: isActive,
+      child: PointerArea(
+        onTap: onTap,
+        child: child,
+        builder: (context, state, child) {
+          final background = switch (state) {
+            PointerState(isHovering: true) when isActive =>
+              omarchy.theme.colors.background,
+            PointerState(isHovering: true) => omarchy.theme.colors.bright.black,
+            _ when isActive => omarchy.theme.colors.background,
+            _ => omarchy.theme.colors.normal.black,
+          };
+          final foreground = switch (state) {
+            PointerState(isHovering: true) when isActive =>
+              omarchy.theme.colors.foreground,
+            PointerState(isHovering: true) => omarchy.theme.colors.bright.white,
+            _ when isActive => omarchy.theme.colors.foreground,
+            _ => omarchy.theme.colors.normal.white,
+          };
+          return Container(
+            decoration: BoxDecoration(color: background),
+            padding: DefaultPadding.of(context),
+            child: DefaultForeground(foreground: foreground, child: child!),
+          );
+        },
+      ),
     );
   }
 }

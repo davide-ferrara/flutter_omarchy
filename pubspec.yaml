@@ -1,7 +1,7 @@
 name: flutter_omarchy
 description: "A new Flutter package project."
 version: 0.1.0
-homepage:
+homepage: https://github.com/aloisdeniel/flutter_omarchy
 
 environment:
   sdk: ^3.8.1
@@ -23,5 +23,6 @@ flutter:
    - family: CaskaydiaMono Nerd Font
      fonts:
        - asset: lib/fonts/CaskaydiaMonoNerdFont-Regular.ttf
+         weight: 400
        - asset: lib/fonts/CaskaydiaMonoNerdFont-Bold.ttf
          weight: 700

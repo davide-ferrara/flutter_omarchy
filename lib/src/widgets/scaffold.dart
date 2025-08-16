@@ -7,6 +7,7 @@ class OmarchyScaffold extends StatefulWidget {
     super.key,
     required this.child,
     this.leadingMenu,
+    this.navigationBar,
     this.status,
     this.minLeadingMenuWidth = 50.0,
     this.maxLeadingMenuWidth = 500.0,
@@ -14,6 +15,7 @@ class OmarchyScaffold extends StatefulWidget {
 
   final Widget child;
   final Widget? leadingMenu;
+  final Widget? navigationBar;
   final Widget? status;
   final double minLeadingMenuWidth;
   final double maxLeadingMenuWidth;
@@ -29,6 +31,16 @@ class _OmarchyScaffoldState extends State<OmarchyScaffold> {
   Widget build(BuildContext context) {
     final omarchy = Omarchy.of(context).theme;
     var child = widget.child;
+
+    if (widget.navigationBar case final bar?) {
+      child = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          bar,
+          Expanded(key: Key('main'), child: child),
+        ],
+      );
+    }
     if (widget.leadingMenu case final menu?) {
       child = Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -75,16 +75,15 @@ class OmarchyAnsiColorThemeData {
       green: _color(config['green']),
     );
   }
-
   const OmarchyAnsiColorThemeData.tokyoNightNormal()
     : black = const Color(0xFF32344a),
       white = const Color(0xFF787c99),
-      red = const Color(0xFF787c99),
-      green = const Color(0xFF787c99),
-      yellow = const Color(0xFF787c99),
-      blue = const Color(0xFF787c99),
-      magenta = const Color(0xFF787c99),
-      cyan = const Color(0xFF787c99);
+      red = const Color(0xFFf7768e),
+      green = const Color(0xFF9ece6a),
+      yellow = const Color(0xFFe0af68),
+      blue = const Color(0xFF7aa2f7),
+      magenta = const Color(0xFFad8ee6),
+      cyan = const Color(0xFF449dab);
 
   const OmarchyAnsiColorThemeData.tokyoNightBright()
     : black = const Color(0xFF444b6a),
@@ -121,11 +120,10 @@ class OmarchyAnsiColorThemeData {
 
 Color _color(String? hex, [Color fallback = const Color(0xFF000000)]) {
   if (hex == null) return fallback;
-  final buffer = StringBuffer();
   try {
-    if (hex.length == 6 || hex.length == 7) buffer.write('ff');
-    buffer.write(hex.replaceFirst('#', '').replaceFirst('0x', ''));
-    return Color(int.parse(buffer.toString(), radix: 16));
+    return Color(
+      int.parse(hex.replaceFirst('#', '').replaceFirst('0x', ''), radix: 16),
+    );
   } catch (_) {
     return fallback;
   }

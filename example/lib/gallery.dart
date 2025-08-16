@@ -31,7 +31,9 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return OmarchyScaffold(
+      navigationBar: OmarchyNavigationBar(title: Text('Omarchy Gallery')),
       leadingMenu: Menu(
+        selected: selected,
         sections: sections,
         onSectionSelected: (value) {
           setState(() {
@@ -47,25 +49,35 @@ class _HomePageState extends State<HomePage> {
 class Menu extends StatelessWidget {
   const Menu({
     super.key,
+    required this.selected,
     required this.sections,
     required this.onSectionSelected,
   });
 
+  final Widget selected;
   final List<(String, Widget)> sections;
   final ValueChanged<Widget> onSectionSelected;
 
   @override
   Widget build(BuildContext context) {
+    final omarchy = Omarchy.of(context);
     return SizedBox(
       width: 200,
       child: ListView(
         children: [
           for (var item in sections)
-            OmarchyButton(
-              onPressed: () {
+            OmarchyTile(
+              onTap: () {
                 onSectionSelected(item.$2);
               },
-              child: Text(item.$1),
+              title: Text(
+                item.$1,
+                style: TextStyle(
+                  color: item.$2.runtimeType == selected.runtimeType
+                      ? omarchy.theme.colors.selectedText
+                      : null,
+                ),
+              ),
             ),
         ],
       ),
@@ -170,6 +182,19 @@ class WidgetsPage extends StatelessWidget {
                 onPressed: () {},
               ),
           ],
+        ),
+        const SizedBox(height: 24),
+        Text('NavigationBar'),
+        const SizedBox(height: 12),
+        OmarchyNavigationBar(title: Text('Example')),
+        const SizedBox(height: 24),
+        Text('Tile'),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: omarchy.theme.colors.normal.black),
+          ),
+          child: OmarchyTile(title: Text('Example')),
         ),
         const SizedBox(height: 24),
         Text('Scaffold'),
