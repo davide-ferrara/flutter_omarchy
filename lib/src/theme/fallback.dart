@@ -19,7 +19,7 @@ abstract class OmarchyColorThemes {
     ),
     bright: OmarchyAnsiColorThemeData(
       black: Color(0xFF444b6a),
-      white: Color(0xFF787c99),
+      white: Color(0xFFacb0d0),
       red: Color(0xFFff7aa3),
       green: Color(0xFFb9f27c),
       yellow: Color(0xFFff9e64),

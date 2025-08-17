@@ -250,7 +250,31 @@ class WidgetsPage extends StatelessWidget {
                 ),
                 Section(
                   title: 'NavigationBar',
-                  children: [OmarchyNavigationBar(title: Text('Example'))],
+                  children: [
+                    OmarchyNavigationBar(
+                      title: Text('Example'),
+                      trailing: [
+                        OmarchyButton(
+                          child: Icon(OmarchyIcons.dev.facebook),
+                          onPressed: () {},
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                Section(
+                  title: 'Loader',
+                  children: [
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        OmarchyLoader(),
+                        for (final accent in AnsiColor.values)
+                          OmarchyLoader(accent: accent),
+                      ],
+                    ),
+                  ],
                 ),
                 Section(
                   title: 'Tile',
@@ -352,6 +376,7 @@ class WidgetsPage extends StatelessWidget {
                         for (var accent in AnsiColor.values)
                           OmarchyStatus(
                             accent: accent,
+                            onTap: () {},
                             child: Text(accent.name.toUpperCase()),
                           ),
                       ],

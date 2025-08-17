@@ -1,5 +1,4 @@
 import 'package:flutter_omarchy/flutter_omarchy.dart';
-import 'package:flutter_omarchy/src/theme/colors.dart';
 import 'package:flutter_omarchy/src/widgets/utils/default_foreground.dart';
 import 'package:flutter_omarchy/src/widgets/utils/pointer_area.dart';
 
@@ -10,7 +9,13 @@ class OmarchyButtonStyleData {
     required this.pressed,
     required this.disabled,
     required this.hovering,
+    this.padding = const EdgeInsets.all(14),
+    this.borderWidth = 2.0,
+    this.transitionDuration = const Duration(milliseconds: 120),
   });
+  final Duration transitionDuration;
+  final EdgeInsetsGeometry padding;
+  final double borderWidth;
   final OmarchyButtonStyleStateData normal;
   final OmarchyButtonStyleStateData focused;
   final OmarchyButtonStyleStateData pressed;
@@ -25,6 +30,34 @@ class OmarchyButtonStyleData {
         PointerState(isEnabled: false) => disabled,
         _ => normal,
       };
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! OmarchyButtonStyleData) return false;
+    return normal == other.normal &&
+        focused == other.focused &&
+        pressed == other.pressed &&
+        disabled == other.disabled &&
+        hovering == other.hovering &&
+        padding == other.padding &&
+        borderWidth == other.borderWidth &&
+        transitionDuration == other.transitionDuration;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      normal.hashCode,
+      focused.hashCode,
+      pressed.hashCode,
+      disabled.hashCode,
+      hovering.hashCode,
+      padding.hashCode,
+      borderWidth.hashCode,
+      transitionDuration.hashCode,
+    );
+  }
 }
 
 typedef OmarchyButtonStyleStateData = ({
@@ -33,12 +66,70 @@ typedef OmarchyButtonStyleStateData = ({
   Color background,
 });
 
+class OmarchyButtonTheme extends InheritedWidget {
+  const OmarchyButtonTheme({
+    super.key,
+    required super.child,
+    required this.data,
+  });
+
+  final OmarchyButtonStyle data;
+
+  static OmarchyButtonStyle? maybeOf(BuildContext context) {
+    final theme = context
+        .dependOnInheritedWidgetOfExactType<OmarchyButtonTheme>();
+    return theme?.data;
+  }
+
+  static OmarchyButtonStyle of(BuildContext context) {
+    final theme = context
+        .dependOnInheritedWidgetOfExactType<OmarchyButtonTheme>();
+    if (theme == null) {
+      throw FlutterError('OmarchyButtonTheme not found in context');
+    }
+    return theme.data;
+  }
+
+  @override
+  bool updateShouldNotify(covariant InheritedWidget oldWidget) {
+    return oldWidget is OmarchyButtonTheme && data != oldWidget.data;
+  }
+}
+
 abstract class OmarchyButtonStyle {
   const OmarchyButtonStyle();
   const factory OmarchyButtonStyle.primary([AnsiColor accent]) =
       PrimaryOmarchyButtonStyle;
 
+  const factory OmarchyButtonStyle.bar([AnsiColor accent]) =
+      BarOmarchyButtonStyle;
+
+  const factory OmarchyButtonStyle.custom(OmarchyButtonStyleData data) =
+      CustomOmarchyButtonStyle;
+
   OmarchyButtonStyleData resolve(BuildContext context);
+}
+
+class CustomOmarchyButtonStyle extends OmarchyButtonStyle {
+  const CustomOmarchyButtonStyle(this.data);
+  final OmarchyButtonStyleData data;
+
+  @override
+  OmarchyButtonStyleData resolve(BuildContext context) {
+    return data;
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! CustomOmarchyButtonStyle) return false;
+    return data == other.data;
+  }
+
+  @override
+  int get hashCode {
+    return data.hashCode;
+  }
 }
 
 class PrimaryOmarchyButtonStyle extends OmarchyButtonStyle {
@@ -81,6 +172,73 @@ class PrimaryOmarchyButtonStyle extends OmarchyButtonStyle {
       ),
     };
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! PrimaryOmarchyButtonStyle) return false;
+    return accent == other.accent;
+  }
+
+  @override
+  int get hashCode {
+    return accent.hashCode;
+  }
+}
+
+class BarOmarchyButtonStyle extends OmarchyButtonStyle {
+  const BarOmarchyButtonStyle([this.accent = AnsiColor.white]);
+  final AnsiColor accent;
+
+  @override
+  OmarchyButtonStyleData resolve(BuildContext context) {
+    final omarchy = Omarchy.of(context).theme;
+    final bright = omarchy.colors.bright[accent];
+    final normal = omarchy.colors.normal[accent];
+    return switch (accent) {
+      _ => OmarchyButtonStyleData(
+        borderWidth: 0,
+        padding: const EdgeInsets.all(8),
+        normal: (
+          border: const Color(0x00000000),
+          background: normal.withValues(alpha: 0),
+          foreground: bright,
+        ),
+        pressed: (
+          border: const Color(0x00000000),
+          background: normal.withValues(alpha: 0.25),
+          foreground: bright,
+        ),
+        focused: (
+          border: const Color(0x00000000),
+          background: normal.withValues(alpha: 0),
+          foreground: bright,
+        ),
+        hovering: (
+          border: const Color(0x00000000),
+          background: normal.withValues(alpha: 0.15),
+          foreground: bright,
+        ),
+        disabled: (
+          border: const Color(0x00000000),
+          background: normal.withValues(alpha: 0),
+          foreground: normal,
+        ),
+      ),
+    };
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! PrimaryOmarchyButtonStyle) return false;
+    return accent == other.accent;
+  }
+
+  @override
+  int get hashCode {
+    return accent.hashCode;
+  }
 }
 
 class OmarchyButton extends StatelessWidget {
@@ -88,30 +246,37 @@ class OmarchyButton extends StatelessWidget {
     super.key,
     required this.child,
     this.onPressed,
-    this.style = const PrimaryOmarchyButtonStyle(),
     this.padding = const EdgeInsets.all(16),
+    this.style,
   });
 
   final Widget child;
-  final OmarchyButtonStyle style;
+  final OmarchyButtonStyle? style;
   final EdgeInsets padding;
   final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
-    final style = this.style.resolve(context);
+    final style =
+        (this.style ??
+                OmarchyButtonTheme.maybeOf(context) ??
+                OmarchyButtonStyle.primary())
+            .resolve(context);
     return PointerArea(
       onTap: onPressed,
       child: child,
       builder: (context, state, child) {
         final stateStyle = style.fromPointer(state);
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 120),
+          duration: style.transitionDuration,
           decoration: BoxDecoration(
             color: stateStyle.background,
-            border: BoxBorder.all(width: 2, color: stateStyle.border),
+            border: BoxBorder.all(
+              width: style.borderWidth,
+              color: stateStyle.border,
+            ),
           ),
-          padding: const EdgeInsets.all(16),
+          padding: style.padding,
           child: DefaultForeground(
             foreground: stateStyle.foreground,
             child: child!,

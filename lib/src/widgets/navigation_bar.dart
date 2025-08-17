@@ -1,11 +1,18 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_omarchy/flutter_omarchy.dart';
 import 'package:flutter_omarchy/src/omarchy.dart';
 import 'package:flutter_omarchy/src/widgets/utils/title_bar.dart';
 
 class OmarchyNavigationBar extends StatelessWidget {
-  const OmarchyNavigationBar({super.key, required this.title, this.height});
+  const OmarchyNavigationBar({
+    super.key,
+    required this.title,
+    this.height,
+    this.trailing,
+  });
 
   final Widget title;
+  final List<Widget>? trailing;
   final double? height;
 
   @override
@@ -29,6 +36,15 @@ class OmarchyNavigationBar extends StatelessWidget {
           ),
           child: title,
         ),
+        trailing: trailing != null
+            ? OmarchyButtonTheme(
+                data: OmarchyButtonStyle.bar(),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [...trailing!],
+                ),
+              )
+            : const SizedBox.shrink(),
       ),
     );
   }
