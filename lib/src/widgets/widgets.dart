@@ -3,6 +3,7 @@ export 'utils/grouping.dart';
 export 'utils/pointer_area.dart';
 
 export 'button.dart';
+export 'resize_divider.dart';
 export 'checkbox.dart';
 export 'scaffold.dart';
 export 'loader.dart';

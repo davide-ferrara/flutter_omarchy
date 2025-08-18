@@ -6,6 +6,8 @@ import 'package:example/calculator.dart';
 import 'package:example/counter.dart';
 import 'package:example/file_explorer.dart';
 import 'package:example/gallery.dart';
+import 'package:example/markdown_editor.dart';
+import 'package:example/pomodoro.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
 
@@ -13,7 +15,9 @@ enum App {
   gallery,
   counter,
   calculator,
-  file_explorer;
+  file_explorer,
+  markdown_editor,
+  pomodoro;
 
   Widget build() {
     return switch (this) {
@@ -21,6 +25,8 @@ enum App {
       App.gallery => const GalleryApp(),
       App.calculator => const CalculatorApp(),
       App.file_explorer => const FileExplorerApp(),
+      App.markdown_editor => const MarkdownEditorApp(),
+      App.pomodoro => const PomodoroApp(),
     };
   }
 }

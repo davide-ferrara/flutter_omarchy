@@ -28,7 +28,9 @@ class OmarchyStatusBar extends StatelessWidget {
                   position: SidePosition.leading,
                   child: OverflowBar(children: [...leading.group()]),
                 ),
-              ),
+              )
+            else
+              Expanded(child: SizedBox()),
             if (trailing case final trailing?)
               Flexible(
                 flex: 0,
