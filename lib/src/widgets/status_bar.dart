@@ -17,19 +17,32 @@ class OmarchyStatusBar extends StatelessWidget {
     final omarchy = Omarchy.of(context);
     return Container(
       color: omarchy.theme.colors.normal.black,
-      child: Row(
-        children: [
-          if (leading case final leading?)
-            SidePositioning(
-              position: SidePosition.leading,
-              child: Row(children: [...leading.group()]),
-            ),
-          if (trailing case final trailing?)
-            SidePositioning(
-              position: SidePosition.leading,
-              child: Row(children: [...trailing..group()].reversed.toList()),
-            ),
-        ],
+      child: DefaultTextStyle(
+        style: DefaultTextStyle.of(context).style,
+        maxLines: 1,
+        child: Row(
+          children: [
+            if (leading case final leading?)
+              Expanded(
+                child: SidePositioning(
+                  position: SidePosition.leading,
+                  child: OverflowBar(children: [...leading.group()]),
+                ),
+              ),
+            if (trailing case final trailing?)
+              Flexible(
+                flex: 0,
+
+                fit: FlexFit.tight,
+                child: SidePositioning(
+                  position: SidePosition.leading,
+                  child: OverflowBar(
+                    children: [...trailing..group()].reversed.toList(),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

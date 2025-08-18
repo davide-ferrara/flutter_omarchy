@@ -64,23 +64,18 @@ class Menu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final omarchy = Omarchy.of(context);
     return SizedBox(
       width: 200,
       child: ListView(
         children: [
           for (var item in sections)
-            OmarchyTile(
-              onTap: () {
-                onSectionSelected(item.$2);
-              },
-              title: Text(
-                item.$1,
-                style: item.$2.runtimeType == selected.runtimeType
-                    ? omarchy.theme.text.italic.copyWith(
-                        color: omarchy.theme.colors.selectedText,
-                      )
-                    : omarchy.theme.text.normal,
+            Selected(
+              isSelected: item.$2.runtimeType == selected.runtimeType,
+              child: OmarchyTile(
+                onTap: () {
+                  onSectionSelected(item.$2);
+                },
+                title: Text(item.$1),
               ),
             ),
         ],
@@ -118,19 +113,33 @@ class TextStyles extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final omarchy = Omarchy.of(context).theme.text;
+    final omarchy = Omarchy.of(context);
     final base = [
-      ('normal', omarchy.normal),
-      ('bold', omarchy.bold),
-      ('italic', omarchy.italic),
+      ('normal', omarchy.theme.text.normal),
+      ('bold', omarchy.theme.text.bold),
+      ('italic', omarchy.theme.text.italic),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 8,
       children: [
         for (var (name, style) in base)
-          Tooltip(
-            message: name,
+          OmarchyTooltip(
+            richMessage: TextSpan(
+              children: [
+                TextSpan(text: name),
+                TextSpan(text: ' '),
+                TextSpan(
+                  text: style.fontFamily,
+                  style: TextStyle(color: omarchy.theme.colors.bright.black),
+                ),
+                TextSpan(text: ' '),
+                TextSpan(
+                  text: '${style.fontSize}pt',
+                  style: TextStyle(color: omarchy.theme.colors.bright.black),
+                ),
+              ],
+            ),
             child: Text(name, style: style),
           ),
       ],
@@ -143,32 +152,32 @@ class Colors extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final omarchy = Omarchy.of(context).theme.colors;
+    final colors = Omarchy.of(context).theme.colors;
     final base = [
-      ('background', omarchy.background),
-      ('foreground', omarchy.foreground),
-      ('border', omarchy.border),
-      ('selectedText', omarchy.selectedText),
+      ('background', colors.background),
+      ('foreground', colors.foreground),
+      ('border', colors.border),
+      ('selectedText', colors.selectedText),
     ];
     final normal = [
-      ('normal.black', omarchy.normal.black),
-      ('normal.white', omarchy.normal.white),
-      ('normal.red', omarchy.normal.red),
-      ('normal.green', omarchy.normal.green),
-      ('normal.blue', omarchy.normal.blue),
-      ('normal.cyan', omarchy.normal.cyan),
-      ('normal.magenta', omarchy.normal.magenta),
-      ('normal.yellow', omarchy.normal.yellow),
+      ('normal.black', colors.normal.black),
+      ('normal.white', colors.normal.white),
+      ('normal.red', colors.normal.red),
+      ('normal.green', colors.normal.green),
+      ('normal.blue', colors.normal.blue),
+      ('normal.cyan', colors.normal.cyan),
+      ('normal.magenta', colors.normal.magenta),
+      ('normal.yellow', colors.normal.yellow),
     ];
     final bright = [
-      ('bright.black', omarchy.bright.black),
-      ('bright.white', omarchy.bright.white),
-      ('bright.red', omarchy.bright.red),
-      ('bright.green', omarchy.bright.green),
-      ('bright.blue', omarchy.bright.blue),
-      ('bright.cyan', omarchy.bright.cyan),
-      ('bright.magenta', omarchy.bright.magenta),
-      ('bright.yellow', omarchy.bright.yellow),
+      ('bright.black', colors.bright.black),
+      ('bright.white', colors.bright.white),
+      ('bright.red', colors.bright.red),
+      ('bright.green', colors.bright.green),
+      ('bright.blue', colors.bright.blue),
+      ('bright.cyan', colors.bright.cyan),
+      ('bright.magenta', colors.bright.magenta),
+      ('bright.yellow', colors.bright.yellow),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,8 +189,18 @@ class Colors extends StatelessWidget {
             runSpacing: 8,
             children: [
               for (var (name, color) in group)
-                Tooltip(
-                  message: name,
+                OmarchyTooltip(
+                  richMessage: TextSpan(
+                    children: [
+                      TextSpan(text: name),
+                      TextSpan(text: ' '),
+                      TextSpan(
+                        text:
+                            '#${color.value.toRadixString(16).padLeft(6, '0')}',
+                        style: TextStyle(color: colors.bright.black),
+                      ),
+                    ],
+                  ),
                   child: Container(width: 20, height: 20, color: color),
                 ),
             ],
@@ -226,39 +245,92 @@ class WidgetsPage extends StatelessWidget {
                   ],
                 ),
                 Section(
+                  title: 'Icon',
+                  children: [
+                    SizedBox(
+                      height: 24,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          for (final icon in OmarchyIcons.values)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: OmarchyTooltip(
+                                message: icon.$1,
+                                child: Icon(icon.$2, size: 24),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                Section(
                   title: 'Button',
                   children: [
                     Wrap(
                       spacing: 12,
                       runSpacing: 12,
                       children: [
-                        for (var color in AnsiColor.values)
-                          OmarchyButton(
-                            style: OmarchyButtonStyle.primary(color),
-                            child: Text('Click me!'),
-                            onPressed: () {},
-                          ),
-                        for (var color in AnsiColor.values)
-                          OmarchyButton(
-                            style: OmarchyButtonStyle.primary(color),
-                            child: Icon(OmarchyIcons.dev.facebook),
-                            onPressed: () {},
-                          ),
+                        for (var style = 0; style < 2; style++)
+                          for (var child = 0; child < 2; child++)
+                            for (var color in AnsiColor.values)
+                              OmarchyButton(
+                                style: switch (style) {
+                                  1 => OmarchyButtonStyle.filled(color),
+                                  _ => OmarchyButtonStyle.outline(color),
+                                },
+                                child: switch (child) {
+                                  1 => Text('Click me!'),
+                                  _ => Icon(OmarchyIcons.codSettings),
+                                },
+                                onPressed: () {},
+                              ),
                       ],
                     ),
                   ],
                 ),
                 Section(
-                  title: 'NavigationBar',
+                  title: 'Checkbox',
                   children: [
-                    OmarchyNavigationBar(
-                      title: Text('Example'),
-                      trailing: [
-                        OmarchyButton(
-                          child: Icon(OmarchyIcons.dev.facebook),
-                          onPressed: () {},
-                        ),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        OmarchyCheckbox(),
+                        for (final state in CheckboxState.values)
+                          for (final accent in AnsiColor.values)
+                            OmarchyCheckbox(accent: accent, state: state),
                       ],
+                    ),
+                  ],
+                ),
+                Section(
+                  title: 'TextInput',
+                  children: [
+                    OmarchyTextInput(placeholder: Text('Enter text here')),
+                    OmarchyTextInput(
+                      maxLines: null,
+                      placeholder: Text('Enter multiline text here'),
+                    ),
+                  ],
+                ),
+                Section(
+                  title: 'InputContainer',
+                  children: [
+                    OmarchyInputContainer(
+                      builder: (context, node) => OmarchyTextInput(
+                        focusNode: node,
+                        placeholder: Text('Enter text here'),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    OmarchyInputContainer(
+                      builder: (context, node) => OmarchyTextInput(
+                        focusNode: node,
+                        maxLines: null,
+                        placeholder: Text('Enter multiline text here'),
+                      ),
                     ),
                   ],
                 ),
@@ -272,6 +344,20 @@ class WidgetsPage extends StatelessWidget {
                         OmarchyLoader(),
                         for (final accent in AnsiColor.values)
                           OmarchyLoader(accent: accent),
+                      ],
+                    ),
+                  ],
+                ),
+                Section(
+                  title: 'NavigationBar',
+                  children: [
+                    OmarchyNavigationBar(
+                      title: Text('Example'),
+                      trailing: [
+                        OmarchyButton(
+                          child: Icon(OmarchyIcons.codAdd),
+                          onPressed: () {},
+                        ),
                       ],
                     ),
                   ],
@@ -315,22 +401,18 @@ class WidgetsPage extends StatelessWidget {
                   children: [
                     OmarchyPopOver(
                       popOverBuilder: (context, size, hide) {
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: omarchy.theme.colors.background,
-                            border: Border.all(
-                              color: omarchy.theme.colors.border,
-                              width: 2,
-                            ),
-                          ),
-                          width: size?.width,
-                          height: 220,
+                        return OmarchyPopOverContainer(
+                          maxWidth: size?.width ?? 200,
+                          maxHeight: 300,
                           child: ListView(
                             children: [
                               for (var i = 0; i < 20; i++)
-                                OmarchyTile(
-                                  title: Text('Option $i'),
-                                  onTap: hide,
+                                Selected(
+                                  isSelected: i == 2,
+                                  child: OmarchyTile(
+                                    title: Text('Option $i'),
+                                    onTap: hide,
+                                  ),
                                 ),
                             ],
                           ),
@@ -365,6 +447,28 @@ class WidgetsPage extends StatelessWidget {
                             onClose: () {},
                           ),
                       ],
+                    ),
+                  ],
+                ),
+                Section(
+                  title: 'Tooltip',
+                  children: [
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: OmarchyTooltip(
+                        richMessage: TextSpan(
+                          children: [
+                            TextSpan(text: 'A message for '),
+                            TextSpan(
+                              text: 'you',
+                              style: omarchy.theme.text.italic.copyWith(
+                                color: omarchy.theme.colors.bright.red,
+                              ),
+                            ),
+                          ],
+                        ),
+                        child: Text('Hover me!'),
+                      ),
                     ),
                   ],
                 ),

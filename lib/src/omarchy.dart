@@ -84,11 +84,14 @@ class _OmarchyState extends State<Omarchy> {
   Widget build(BuildContext context) {
     return OmarchyDataProvider(
       data: _data,
-      child: DefaultTextStyle(
-        style: _data.theme.text.normal.copyWith(
-          color: _data.theme.colors.foreground,
+      child: IconTheme(
+        data: IconThemeData(size: 18, color: _data.theme.colors.foreground),
+        child: DefaultTextStyle(
+          style: _data.theme.text.normal.copyWith(
+            color: _data.theme.colors.foreground,
+          ),
+          child: widget.child,
         ),
-        child: widget.child,
       ),
     );
   }

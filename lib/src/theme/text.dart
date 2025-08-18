@@ -33,21 +33,21 @@ class OmarchyTextStyleData {
   const OmarchyTextStyleData.fallback()
     : normal = const TextStyle(
         fontSize: 14,
-        fontFamily: 'CaskaydiaMono Nerd Font',
+        fontFamily: 'CaskaydiaMono Nerd Font Mono',
         fontWeight: FontWeight.normal,
         decoration: TextDecoration.none,
         package: 'flutter_omarchy',
       ),
       bold = const TextStyle(
         fontSize: 14,
-        fontFamily: 'CaskaydiaMono Nerd Font',
+        fontFamily: 'CaskaydiaMono Nerd Font Mono',
         fontWeight: FontWeight.bold,
         decoration: TextDecoration.none,
         package: 'flutter_omarchy',
       ),
       italic = const TextStyle(
         fontSize: 14,
-        fontFamily: 'CaskaydiaMono Nerd Font',
+        fontFamily: 'CaskaydiaMono Nerd Font Mono',
         fontStyle: FontStyle.italic,
         fontWeight: FontWeight.normal,
         decoration: TextDecoration.none,

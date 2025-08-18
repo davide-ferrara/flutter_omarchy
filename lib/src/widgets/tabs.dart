@@ -81,7 +81,7 @@ class OmarchyTab extends StatelessWidget {
         ],
       );
     }
-    return IsSelected(
+    return Selected(
       isSelected: isActive,
       child: PointerArea(
         onTap: onTap,
@@ -104,7 +104,13 @@ class OmarchyTab extends StatelessWidget {
           return Container(
             decoration: BoxDecoration(color: background),
             padding: DefaultPadding.of(context),
-            child: DefaultForeground(foreground: foreground, child: child!),
+            child: DefaultForeground(
+              foreground: foreground,
+              textStyle: isActive
+                  ? omarchy.theme.text.italic
+                  : omarchy.theme.text.normal,
+              child: child!,
+            ),
           );
         },
       ),

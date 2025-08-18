@@ -9,11 +9,14 @@ class DefaultPadding extends InheritedWidget {
 
   final EdgeInsetsGeometry padding;
 
-  static EdgeInsetsGeometry of(BuildContext context) {
+  static EdgeInsetsGeometry? maybeOf(BuildContext context) {
     return context
-            .dependOnInheritedWidgetOfExactType<DefaultPadding>()
-            ?.padding ??
-        EdgeInsets.zero;
+        .dependOnInheritedWidgetOfExactType<DefaultPadding>()
+        ?.padding;
+  }
+
+  static EdgeInsetsGeometry of(BuildContext context) {
+    return maybeOf(context) ?? EdgeInsets.zero;
   }
 
   @override

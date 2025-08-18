@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart' show Icons;
 import 'package:flutter_omarchy/flutter_omarchy.dart';
 
 class CounterApp extends StatelessWidget {
@@ -32,6 +31,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return OmarchyScaffold(
+      navigationBar: OmarchyNavigationBar(title: Text('Counter')),
       child: Center(
         child: Column(
           spacing: 24,
@@ -48,7 +48,7 @@ class _HomePageState extends State<HomePage> {
             ),
             OmarchyButton(
               onPressed: _incrementCounter,
-              child: const Icon(Icons.add),
+              child: const Icon(OmarchyIcons.codAdd, size: 42),
             ),
           ],
         ),

@@ -9,8 +9,8 @@ class OmarchyButtonStyleData {
     required this.pressed,
     required this.disabled,
     required this.hovering,
-    this.padding = const EdgeInsets.all(14),
-    this.borderWidth = 2.0,
+    required this.padding,
+    required this.borderWidth,
     this.transitionDuration = const Duration(milliseconds: 120),
   });
   final Duration transitionDuration;
@@ -98,8 +98,16 @@ class OmarchyButtonTheme extends InheritedWidget {
 
 abstract class OmarchyButtonStyle {
   const OmarchyButtonStyle();
-  const factory OmarchyButtonStyle.primary([AnsiColor accent]) =
-      PrimaryOmarchyButtonStyle;
+  const factory OmarchyButtonStyle.outline(
+    AnsiColor accent, {
+    EdgeInsetsGeometry padding,
+    double borderWidth,
+  }) = OutlineOmarchyButtonStyle;
+
+  const factory OmarchyButtonStyle.filled(
+    AnsiColor accent, {
+    EdgeInsetsGeometry padding,
+  }) = FilledOmarchyButtonStyle;
 
   const factory OmarchyButtonStyle.bar([AnsiColor accent]) =
       BarOmarchyButtonStyle;
@@ -132,9 +140,13 @@ class CustomOmarchyButtonStyle extends OmarchyButtonStyle {
   }
 }
 
-class PrimaryOmarchyButtonStyle extends OmarchyButtonStyle {
-  const PrimaryOmarchyButtonStyle([this.accent = AnsiColor.white]);
+class FilledOmarchyButtonStyle extends OmarchyButtonStyle {
+  const FilledOmarchyButtonStyle(
+    this.accent, {
+    this.padding = const EdgeInsets.all(8),
+  });
   final AnsiColor accent;
+  final EdgeInsetsGeometry padding;
 
   @override
   OmarchyButtonStyleData resolve(BuildContext context) {
@@ -144,6 +156,70 @@ class PrimaryOmarchyButtonStyle extends OmarchyButtonStyle {
     return switch (accent) {
       // TODO
       _ => OmarchyButtonStyleData(
+        padding: padding,
+        borderWidth: 2,
+        normal: (
+          border: bright.withValues(alpha: 0),
+          background: normal.withValues(alpha: 0.15),
+          foreground: bright,
+        ),
+        pressed: (
+          border: bright.withValues(alpha: 0),
+          background: normal.withValues(alpha: 0.35),
+          foreground: bright,
+        ),
+        focused: (
+          border: bright.withValues(alpha: 0.5),
+          background: normal.withValues(alpha: 0.15),
+          foreground: bright,
+        ),
+        hovering: (
+          border: bright.withValues(alpha: 0),
+          background: normal.withValues(alpha: 0.25),
+          foreground: bright,
+        ),
+        disabled: (
+          border: normal,
+          background: normal.withValues(alpha: 0.05),
+          foreground: normal,
+        ),
+      ),
+    };
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! OutlineOmarchyButtonStyle) return false;
+    return accent == other.accent && padding == other.padding;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(accent, padding);
+  }
+}
+
+class OutlineOmarchyButtonStyle extends OmarchyButtonStyle {
+  const OutlineOmarchyButtonStyle(
+    this.accent, {
+    this.padding = const EdgeInsets.all(8),
+    this.borderWidth = 2,
+  });
+  final AnsiColor accent;
+  final EdgeInsetsGeometry padding;
+  final double borderWidth;
+
+  @override
+  OmarchyButtonStyleData resolve(BuildContext context) {
+    final omarchy = Omarchy.of(context).theme;
+    final bright = omarchy.colors.bright[accent];
+    final normal = omarchy.colors.normal[accent];
+    return switch (accent) {
+      // TODO
+      _ => OmarchyButtonStyleData(
+        padding: padding,
+        borderWidth: borderWidth,
         normal: (
           border: normal,
           background: normal.withValues(alpha: 0),
@@ -176,13 +252,15 @@ class PrimaryOmarchyButtonStyle extends OmarchyButtonStyle {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    if (other is! PrimaryOmarchyButtonStyle) return false;
-    return accent == other.accent;
+    if (other is! OutlineOmarchyButtonStyle) return false;
+    return accent == other.accent &&
+        padding == other.padding &&
+        borderWidth == other.borderWidth;
   }
 
   @override
   int get hashCode {
-    return accent.hashCode;
+    return Object.hash(accent, padding, borderWidth);
   }
 }
 
@@ -198,7 +276,7 @@ class BarOmarchyButtonStyle extends OmarchyButtonStyle {
     return switch (accent) {
       _ => OmarchyButtonStyleData(
         borderWidth: 0,
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(12),
         normal: (
           border: const Color(0x00000000),
           background: normal.withValues(alpha: 0),
@@ -231,7 +309,7 @@ class BarOmarchyButtonStyle extends OmarchyButtonStyle {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    if (other is! PrimaryOmarchyButtonStyle) return false;
+    if (other is! OutlineOmarchyButtonStyle) return false;
     return accent == other.accent;
   }
 
@@ -260,7 +338,7 @@ class OmarchyButton extends StatelessWidget {
     final style =
         (this.style ??
                 OmarchyButtonTheme.maybeOf(context) ??
-                OmarchyButtonStyle.primary())
+                OmarchyButtonStyle.outline(AnsiColor.white))
             .resolve(context);
     return PointerArea(
       onTap: onPressed,

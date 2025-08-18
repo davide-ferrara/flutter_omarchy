@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_omarchy/src/omarchy.dart';
 import 'package:flutter_omarchy/src/widgets/utils/default_foreground.dart';
 import 'package:flutter_omarchy/src/widgets/utils/pointer_area.dart';
+import 'package:flutter_omarchy/src/widgets/utils/selected.dart';
 
 class OmarchyTile extends StatelessWidget {
   const OmarchyTile({
@@ -23,6 +24,7 @@ class OmarchyTile extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [title, if (description case final description?) description],
     );
+    final isSelected = Selected.of(context);
     return SizedBox(
       height: omarchy.theme.text.normal.fontSize! * 4,
       child: PointerArea(
@@ -43,7 +45,12 @@ class OmarchyTile extends StatelessWidget {
             ),
             padding: const EdgeInsets.all(16),
             child: DefaultForeground(
+              textStyle: switch (isSelected) {
+                true => omarchy.theme.text.italic,
+                false => omarchy.theme.text.normal,
+              },
               foreground: switch (state) {
+                _ when isSelected => omarchy.theme.colors.selectedText,
                 PointerState(isPressed: true) =>
                   omarchy.theme.colors.selectedText,
                 PointerState(isHovering: true) =>

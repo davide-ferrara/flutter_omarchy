@@ -43,12 +43,16 @@ class _OmarchyResizeDividerState extends State<OmarchyResizeDivider> {
         widget.onSizeChanged(current);
       },
       builder: (context, pointer, _) => Container(
+        margin: switch (widget.direction) {
+          Axis.horizontal => EdgeInsets.symmetric(horizontal: 2.0),
+          Axis.vertical => EdgeInsets.symmetric(vertical: 2.0),
+        },
         width: switch (widget.direction) {
-          Axis.horizontal => 4,
+          Axis.horizontal => 1,
           Axis.vertical => double.infinity,
         },
         height: switch (widget.direction) {
-          Axis.vertical => 4,
+          Axis.vertical => 1,
           Axis.horizontal => double.infinity,
         },
         color: switch (pointer) {

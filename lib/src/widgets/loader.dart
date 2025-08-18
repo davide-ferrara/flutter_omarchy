@@ -9,7 +9,7 @@ class OmarchyLoader extends StatefulWidget {
     super.key,
     this.color,
     this.size,
-    this.period = const Duration(milliseconds: 500),
+    this.period = const Duration(seconds: 2),
     this.accent,
   });
 
@@ -55,7 +55,7 @@ class _OmarchyLoaderState extends State<OmarchyLoader>
           null => omarchy.theme.colors.foreground,
         };
     final size =
-        widget.size ?? (omarchy.theme.text.normal.fontSize ?? 12) * 0.8;
+        widget.size ?? (omarchy.theme.text.normal.fontSize ?? 12) * 1.2;
     return CustomPaint(
       size: Size(size, size),
       foregroundPainter: _Painter(color: color, anim: controller),
@@ -71,20 +71,39 @@ class _Painter extends CustomPainter {
   double get time => anim.value;
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = size.width / 4
+    final borderTime = Curves.easeIn.transform(
+      time > 0.5 ? 1 - (time - 0.5) * 2 : time * 2,
+    );
+    const margin = 4.0;
+    var paint = Paint()
+      ..strokeWidth = size.width / 10
       ..style = PaintingStyle.stroke
-      ..shader = RadialGradient(
-        radius: 0.6,
-        center: Alignment(
-          math.sin(time * 2 * math.pi),
-          math.cos(time * 2 * math.pi),
-        ),
-        colors: [color, color.withValues(alpha: 0.1)],
-        stops: [0.0, 1.0],
-      ).createShader(Offset.zero & size);
+      ..color = color.withValues(alpha: 0.1 + 0.2 * borderTime);
+
     canvas.drawRect(Offset.zero & size, paint);
+
+    final centerTime = Curves.easeIn.transform((time % 0.2) * 5);
+
+    paint = Paint()
+      ..style = PaintingStyle.fill
+      ..shader = RadialGradient(
+        radius: 0.7,
+        center: Alignment(
+          math.sin(centerTime * 2 * math.pi),
+          math.cos(centerTime * 2 * math.pi),
+        ),
+        colors: [
+          color,
+          color.withValues(alpha: 0.1),
+          color.withValues(alpha: 0.1),
+        ],
+        stops: [0.0, 0.7, 1.0],
+      ).createShader(Offset.zero & size);
+    canvas.drawRect(
+      Offset(margin, margin) &
+          Size(size.height - margin * 2, size.height - margin * 2),
+      paint,
+    );
   }
 
   @override

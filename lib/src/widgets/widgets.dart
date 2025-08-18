@@ -1,4 +1,9 @@
+export 'utils/selected.dart';
+export 'utils/grouping.dart';
+export 'utils/pointer_area.dart';
+
 export 'button.dart';
+export 'checkbox.dart';
 export 'scaffold.dart';
 export 'loader.dart';
 export 'logo.dart';
@@ -8,4 +13,7 @@ export 'divider.dart';
 export 'pop_over.dart';
 export 'tabs.dart';
 export 'tile.dart';
-export 'icon.dart';
+export 'icon_data.g.dart';
+export 'tooltip.dart';
+export 'input_container.dart';
+export 'text_input.dart';

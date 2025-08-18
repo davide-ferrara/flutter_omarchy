@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_omarchy/src/theme/theme.dart';
 
 typedef OmarchyPopOverChildWidgetBuilder =
     Widget Function(BuildContext context, VoidCallback show);
@@ -73,6 +74,39 @@ class _OmarchyPopOverState extends State<OmarchyPopOver> {
           );
         },
         child: widget.builder(context, _controller.show),
+      ),
+    );
+  }
+}
+
+class OmarchyPopOverContainer extends StatelessWidget {
+  const OmarchyPopOverContainer({
+    super.key,
+    required this.child,
+    required this.maxWidth,
+    this.maxHeight = 300,
+  });
+
+  final double maxWidth;
+  final double maxHeight;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = OmarchyTheme.of(context);
+    return SizedBox(
+      width: maxWidth,
+      height: maxHeight,
+      child: Align(
+        alignment: Alignment.topLeft,
+        child: Container(
+          decoration: BoxDecoration(
+            color: theme.colors.background,
+            border: Border.all(color: theme.colors.border, width: 2),
+          ),
+          constraints: BoxConstraints(maxWidth: maxWidth, maxHeight: maxHeight),
+          child: child,
+        ),
       ),
     );
   }

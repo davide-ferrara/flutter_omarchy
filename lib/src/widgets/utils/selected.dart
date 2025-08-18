@@ -1,19 +1,17 @@
 import 'package:flutter/widgets.dart';
 
-class IsSelected extends InheritedWidget {
-  const IsSelected({super.key, required super.child, required this.isSelected});
+class Selected extends InheritedWidget {
+  const Selected({super.key, required super.child, this.isSelected = false});
 
   final bool isSelected;
 
   static bool of(BuildContext context) {
-    return context
-            .dependOnInheritedWidgetOfExactType<IsSelected>()
-            ?.isSelected ??
+    return context.dependOnInheritedWidgetOfExactType<Selected>()?.isSelected ??
         false;
   }
 
   @override
-  bool updateShouldNotify(covariant IsSelected oldWidget) {
+  bool updateShouldNotify(covariant Selected oldWidget) {
     return isSelected != oldWidget.isSelected;
   }
 }
