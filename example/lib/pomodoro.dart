@@ -118,6 +118,9 @@ class _PomodoroTimerState extends State<PomodoroTimer>
   @override
   Widget build(BuildContext context) {
     final theme = OmarchyTheme.of(context);
+    late final endsAt = DateTime.now().add(
+      Duration(seconds: _secondsRemaining),
+    );
     return OmarchyScaffold(
       navigationBar: OmarchyNavigationBar(title: const Text('Pomodoro Timer')),
       status: OmarchyStatusBar(
@@ -142,6 +145,18 @@ class _PomodoroTimerState extends State<PomodoroTimer>
               return Text('BREAK');
             }(),
           ),
+          if (_isRunning)
+            OmarchyStatus(
+              accent: AnsiColor.white,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: 4,
+                children: [
+                  Icon(OmarchyIcons.codArrowRight),
+                  Text('${endsAt.hour}:${endsAt.minute}'),
+                ],
+              ),
+            ),
         ],
         trailing: [
           OmarchyStatus(
