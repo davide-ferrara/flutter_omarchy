@@ -25,8 +25,8 @@ class OmarchyTextStyleData {
     final normal = _textStyle(font['normal']);
     return OmarchyTextStyleData(
       normal: normal,
-      italic: _textStyle(font['italic']),
-      bold: _textStyle(font['bold']),
+      italic: _textStyle(font['italic']).copyWith(fontStyle: FontStyle.italic),
+      bold: _textStyle(font['bold']).copyWith(fontWeight: FontWeight.bold),
     );
   }
 

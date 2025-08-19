@@ -95,9 +95,8 @@ class OmarchyAnsiColorThemeData {
 Color _color(String? hex, [Color fallback = const Color(0xFF000000)]) {
   if (hex == null) return fallback;
   try {
-    return Color(
-      int.parse(hex.replaceFirst('#', '').replaceFirst('0x', ''), radix: 16),
-    );
+    final value = hex.replaceFirst('#', '').replaceFirst('0x', '');
+    return Color(0xFF000000 | int.parse(value, radix: 16));
   } catch (_) {
     return fallback;
   }
