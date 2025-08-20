@@ -306,6 +306,24 @@ class WidgetsPage extends StatelessWidget {
                   ],
                 ),
                 Section(
+                  title: 'ProgressBar',
+                  children: [
+                    Column(
+                      spacing: 14,
+                      children: [
+                        OmarchyProgressBar(progress: 0),
+                        for (final progress in [0.2, 0.6, 1.0]) ...[
+                          OmarchyProgressBar(progress: progress),
+                          OmarchyProgressBar(
+                            accent: AnsiColor.green,
+                            progress: progress,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+                Section(
                   title: 'TextInput',
                   children: [
                     OmarchyTextInput(placeholder: Text('Enter text here')),
