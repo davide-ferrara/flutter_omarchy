@@ -10,7 +10,7 @@ A Flutter package for developing applications for [Omarchy]().
 
 ## Introduction
 
-Flutter Omarchy is a specialized UI toolkit designed for building applications that seamlessly integrate with the omarchy.org Archlinux configuration created by DHH. This package bridges the gap between Flutter's powerful development capabilities and the minimalist, terminal-inspired aesthetic of the Omarchy system. With Flutter Omarchy, developers can create applications that not only function within the Omarchy environment but also maintain its distinctive visual style and interaction patterns.
+Flutter Omarchy is a specialized UI toolkit designed for building applications that seamlessly integrate with the [Omarchy](https://omarchy.org) Archlinux configuration created by [DHH](https://x.com/dhh). This package bridges the gap between Flutter's powerful development capabilities and the minimalist, terminal-inspired aesthetic of the Omarchy system. With Flutter Omarchy, developers can create applications that not only function within the Omarchy environment but also maintain its distinctive visual style and interaction patterns.
 
 ## Quickstart
 
@@ -34,7 +34,7 @@ flutter pub get
 import 'package:flutter_omarchy/flutter_omarchy.dart';
 
 Future<void> main() async {
-  await Omarchy.initialize();
+  await Omarchy.initialize(); // This is required to load fonts
   runApp(MyApp());
 }
 
@@ -63,18 +63,30 @@ The `OmarchyApp` widget is the root of your application:
 
 ```dart
 OmarchyApp(
-  title: 'My App',
   home: MyHomePage(),
 )
 ```
 
 ### Theming
 
-Flutter Omarchy automatically adapts to the system theme of the Omarchy environment, ensuring your application maintains visual consistency with the rest of the system. The package provides a comprehensive design system that follows terminal-inspired aesthetics with monospaced fonts, bordered containers, and a carefully selected color palette. This theming system handles light and dark mode transitions seamlessly, allowing your application to respond to system-wide theme changes without additional configuration.
+Flutter Omarchy automatically adapts to the system theme of the Omarchy environment and respond to system-wide theme changes without additional configuration.
+
+Flutter Omarchy extracts its theme from the Alacritty terminal configuration and Walker CSS files, just as the Omarchy system does. Since Omarchy doesn't have a dedicated theme configuration, the package reads:
+
+- **Alacritty Configuration**: Located at `~/.config/alacritty/alacritty.toml`, this file provides the terminal colors and styling.
+- **Walker CSS**: Located at `~/.config/omarchy/current/theme/walker.css`, this file contains additional color definitions.
+
+The package automatically observes these configuration files for changes. When you modify your Alacritty or Walker configurations, the theme updates in real-time across all Flutter Omarchy applications without requiring a restart.
+
+You can access the current theme in your application using:
 
 
 ```dart
 final theme = OmarchyTheme.of(context);
+final red = theme.colors.normal.red; // Alacritty normal terminal color (background)
+final brightRed = theme.colors.bright.red; // Alacritty bright terminal color (foreground)
+final border = theme.colors.border; // The walker border color
+final body = theme.text.normal.copyWith(color: red); // The text style
 ```
 
 ### Widgets
@@ -83,7 +95,6 @@ Omarchy provides a rich set of widgets:
 
 #### Basic Widgets
 
-- `OmarchyScaffold`: Main layout container
 - `OmarchyButton`: Terminal-style button
 - `OmarchyTextInput`: Text input field
 - `OmarchyCheckbox`: Checkbox component
@@ -91,13 +102,13 @@ Omarchy provides a rich set of widgets:
 
 #### Navigation
 
+- `OmarchyScaffold`: Main layout container
 - `OmarchyNavigationBar`: Side navigation bar
 - `OmarchyTabs`: Tabbed interface
 - `OmarchyStatusBar`: Status bar for displaying app state
 
 #### Layout
 
-- `OmarchyBordered`: Container with terminal-style borders
 - `OmarchyDivider`: Horizontal or vertical divider
 - `OmarchyResizeDivider`: Resizable divider for split views
 
@@ -105,7 +116,36 @@ Omarchy provides a rich set of widgets:
 
 - `OmarchyTooltip`: Tooltip component
 - `OmarchyPopOver`: Popup overlay
-- `OmarchyTreeView`: Hierarchical tree view
+
+## Bundling the app for Omarchy
+
+To bundle and run your Flutter Omarchy application on Linux, follow these steps:
+
+### Building the Linux Bundle
+
+1. Make sure you have the required Linux dependencies installed:
+   ```bash
+   sudo pacman -Syu --needed xz glu
+   sudo pacman -S --needed clang cmake ninja pkgconf gtk3 xz gcc
+   
+   mise plugins install flutter https://github.com/mise-plugins/mise-flutter.git
+   mise use -g flutter@latest
+   ```
+
+2. Build the release version of your application:
+   ```bash
+   flutter build linux --release
+   ```
+
+3. The bundled application will be available in the `build/linux/x64/release/bundle/` directory.
+
+### Running the Application
+
+You can run the bundled application directly:
+```bash
+cd build/linux/x64/release/bundle/
+./your_app_name
+```
 
 ## Example
 
@@ -117,7 +157,7 @@ The package includes several example applications:
 - **Markdown Editor**: Simple markdown editor
 - **Pomodoro**: Productivity timer
 
-To run the examples:
+To run one of the application from Omarchy:
 
 ```bash
 cd example
