@@ -34,6 +34,16 @@ enum App {
 }
 
 Future<void> main(List<String> args) async {
+  final effectiveArgs = [...args];
+
+  // For web we pass query parameters as command line arguments
+  if (kIsWeb) {
+    for (final entry in Uri.base.queryParameters.entries) {
+      effectiveArgs.add('--${entry.key}');
+      effectiveArgs.add(entry.value);
+    }
+  }
+
   final parser = ArgParser();
   parser.addFlag('preview', defaultsTo: kIsWeb || !Platform.isLinux);
   parser.addOption(
@@ -41,16 +51,18 @@ Future<void> main(List<String> args) async {
     defaultsTo: App.pomodoro.name,
     allowed: App.values.map((x) => x.name),
   );
-  final result = parser.parse(args);
+  final result = parser.parse(effectiveArgs);
 
-  await Omarchy.initialize();
-  if (result['preview']) {
-    return runApp(OmarchyPreview());
-  }
+  // Initial app
   final appArg = result['app'];
   final app = App.values.firstWhere(
     (x) => x.name == appArg,
     orElse: () => App.gallery,
   );
+
+  await Omarchy.initialize();
+  if (result['preview']) {
+    return runApp(OmarchyPreview(initialApp: app));
+  }
   runApp(app.build());
 }

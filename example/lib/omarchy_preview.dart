@@ -5,14 +5,15 @@ import 'package:flutter_omarchy/flutter_omarchy.dart';
 ///
 /// This is for demonstration purpose on web.
 class OmarchyPreview extends StatefulWidget {
-  const OmarchyPreview({super.key});
+  const OmarchyPreview({super.key, required this.initialApp});
+  final App initialApp;
 
   @override
   State<OmarchyPreview> createState() => _OmarchyPreviewState();
 }
 
 class _OmarchyPreviewState extends State<OmarchyPreview> {
-  var app = 0;
+  late var app = widget.initialApp;
   @override
   Widget build(BuildContext context) {
     final colors = OmarchyColorThemes.tokyoNight;
@@ -45,7 +46,7 @@ class _OmarchyPreviewState extends State<OmarchyPreview> {
                   PointerArea(
                     onTap: () {
                       setState(() {
-                        this.app = app.index;
+                        this.app = app;
                       });
                     },
                     child: Center(
@@ -55,7 +56,7 @@ class _OmarchyPreviewState extends State<OmarchyPreview> {
                           app.name.toUpperCase(),
                           style: text.normal.copyWith(
                             fontSize: 11,
-                            color: app.index == this.app
+                            color: app == this.app
                                 ? colors.selectedText
                                 : colors.foreground,
                           ),
@@ -77,7 +78,7 @@ class _OmarchyPreviewState extends State<OmarchyPreview> {
               padding: const EdgeInsets.all(14.0),
               child: OmarchyWindow(
                 child: IndexedStack(
-                  index: app,
+                  index: app.index,
                   children: [for (final app in App.values) app.build()],
                 ),
               ),
