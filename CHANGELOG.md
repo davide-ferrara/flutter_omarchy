@@ -1,4 +1,4 @@
-## 0.1.1
+## 0.1.2
 
 * Fixed localization delegates on mobile.
 * Added ProgressBar widget.
