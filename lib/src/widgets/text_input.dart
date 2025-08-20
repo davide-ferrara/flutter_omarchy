@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -658,7 +659,7 @@ class OmarchyTextInputState extends State<OmarchyTextInput>
 
   @override
   bool get forcePressEnabled {
-    if (Platform.isIOS) {
+    if (!kIsWeb && Platform.isIOS) {
       return true;
     }
     return false;
@@ -690,19 +691,25 @@ class OmarchyTextInputState extends State<OmarchyTextInput>
       });
     }
 
-    if (Platform.isMacOS ||
-        Platform.isLinux ||
-        Platform.isWindows ||
-        Platform.isFuchsia ||
-        Platform.isAndroid) {
-      if (cause == SelectionChangedCause.longPress) {
-        _editableText?.bringIntoView(selection.extent);
-      }
-    }
-
-    if (Platform.isLinux || Platform.isMacOS || Platform.isWindows) {
+    if (kIsWeb) {
       if (cause == SelectionChangedCause.drag) {
         _editableText?.hideToolbar();
+      }
+    } else {
+      if (Platform.isMacOS ||
+          Platform.isLinux ||
+          Platform.isWindows ||
+          Platform.isFuchsia ||
+          Platform.isAndroid) {
+        if (cause == SelectionChangedCause.longPress) {
+          _editableText?.bringIntoView(selection.extent);
+        }
+      }
+
+      if (Platform.isLinux || Platform.isMacOS || Platform.isWindows) {
+        if (cause == SelectionChangedCause.drag) {
+          _editableText?.hideToolbar();
+        }
       }
     }
   }
@@ -775,6 +782,9 @@ class OmarchyTextInputState extends State<OmarchyTextInput>
     final effectiveGap = widget.gap ?? 8.0;
 
     final defaultSelectionControls = () {
+      if (kIsWeb) {
+        return desktopTextSelectionControls;
+      }
       if (Platform.isIOS) {
         return cupertinoTextSelectionHandleControls;
       }
@@ -1040,15 +1050,12 @@ class _InputSelectionGestureDetectorBuilder
   void onSingleLongTapStart(LongPressStartDetails details) {
     super.onSingleLongTapStart(details);
     if (delegate.selectionEnabled) {
-      switch (Theme.of(_state.context).platform) {
-        case TargetPlatform.iOS:
-        case TargetPlatform.macOS:
-          break;
-        case TargetPlatform.android:
-        case TargetPlatform.fuchsia:
-        case TargetPlatform.linux:
-        case TargetPlatform.windows:
-          Feedback.forLongPress(_state.context);
+      if (kIsWeb ||
+          Platform.isAndroid ||
+          Platform.isWindows ||
+          Platform.isFuchsia ||
+          Platform.isLinux) {
+        Feedback.forLongPress(_state.context);
       }
     }
   }

@@ -35,7 +35,22 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return OmarchyScaffold(
-      navigationBar: OmarchyNavigationBar(title: Text('Omarchy Gallery')),
+      navigationBar: Builder(
+        builder: (context) {
+          return OmarchyNavigationBar(
+            title: Text('Omarchy Gallery'),
+            leading: [
+              if (OmarchyScaffold.leadingMenuOf(context).isHidden)
+                OmarchyButton(
+                  child: Icon(OmarchyIcons.codMenu),
+                  onPressed: () {
+                    OmarchyScaffold.showLeadingMenu(context);
+                  },
+                ),
+            ],
+          );
+        },
+      ),
       leadingMenu: Menu(
         selected: selected,
         sections: sections,
@@ -74,6 +89,7 @@ class Menu extends StatelessWidget {
               child: OmarchyTile(
                 onTap: () {
                   onSectionSelected(item.$2);
+                  OmarchyScaffold.hideLeadingMenu(context);
                 },
                 title: Text(item.$1),
               ),

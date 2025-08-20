@@ -1,16 +1,14 @@
-# Flutter Omarchy
+![Logo](doc/logo.png)
 
 [![pub package](https://img.shields.io/pub/v/flutter_omarchy.svg)](https://pub.dev/packages/flutter_omarchy)
 [![GitHub Stars](https://img.shields.io/github/stars/aloisdeniel/flutter_omarchy.svg)](https://github.com/aloisdeniel/flutter_omarchy)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A Flutter package for developing applications for [Omarchy]().
-
-![Omarchy Preview](example/assets/wallpaper.png)
+A Flutter package for developing applications for [Omarchy](https://omarchy.org).
 
 ## Introduction
 
-Flutter Omarchy is a specialized UI toolkit designed for building applications that seamlessly integrate with the [Omarchy](https://omarchy.org) Archlinux configuration created by [DHH](https://x.com/dhh). This package bridges the gap between Flutter's powerful development capabilities and the minimalist, terminal-inspired aesthetic of the Omarchy system. With Flutter Omarchy, developers can create applications that not only function within the Omarchy environment but also maintain its distinctive visual style and interaction patterns.
+Flutter Omarchy is a specialized UI toolkit designed for building applications that seamlessly integrate with the [Omarchy](https://omarchy.org) Archlinux configuration created by [DHH](https://x.com/dhh). This package bridges the gap between Flutter's powerful development capabilities and the minimalist, terminal-inspired aesthetic of the Omarchy system. 
 
 ## Quickstart
 
@@ -18,14 +16,8 @@ Flutter Omarchy is a specialized UI toolkit designed for building applications t
 
 Add Flutter Omarchy to your `pubspec.yaml`:
 
-```yaml
-dependencies:
-  flutter_omarchy: ^0.1.0
-```
-
-Run the following command:
 ```bash
-flutter pub get
+flutter pub add flutter_omarchy
 ```
 
 ### Basic Usage
@@ -147,22 +139,54 @@ cd build/linux/x64/release/bundle/
 ./your_app_name
 ```
 
+## Running on other platforms *(Windows, macOS, Android, iOS, Web)*
+
+Flutter Omarchy is a pure Flutter package, making it compatible with all Flutter-supported platforms including Windows, macOS, Android, iOS, and Web. If the Omarchy configuration files aren't found on these platforms, the theme automatically falls back to the Tokyonight theme, ensuring a consistent visual experience.
+
+While the package should run without issues on all platforms, please note that our primary focus is on the Omarchy Linux platform. Some features may not be fully tested on other platforms, and platform-specific optimizations might be limited. We welcome feedback and contributions to improve cross-platform compatibility.
+
 ## Example
 
-The package includes several example applications:
+The package includes several example applications. 
 
-- **Counter**: Simple counter app
-- **Calculator**: Basic calculator
-- **File Explorer**: Terminal-style file browser
-- **Markdown Editor**: Simple markdown editor
-- **Pomodoro**: Productivity timer
+Note that these examples are just basic showcases for components, and the logic behind them might be incomplete or not suitable for production use. They're designed to demonstrate the visual appearance and basic functionality of the Omarchy widgets rather than provide complete application solutions.
 
-To run one of the application from Omarchy:
+To run one of the example application from Omarchy:
 
 ```bash
 cd example
 flutter run --app=pomodoro
 ```
+
+### Counter
+
+![Screenshot](doc/example-counter.png)
+
+[View in browser](https://aloisdeniel.github.io/flutter_omarchy/?app=counter) | [Code](example/lib/counter.dart)
+
+### Gallery
+
+![Screenshot](doc/example-gallery.png)
+
+[View in browser](https://aloisdeniel.github.io/flutter_omarchy/?app=gallery) | [Code](example/lib/gallery.dart)
+
+### File Explorer
+
+![Screenshot](doc/example-file-explorer.png)
+
+[View in browser](https://aloisdeniel.github.io/flutter_omarchy/?app=file_explorer) | [Code](example/lib/pomodoro.dart)
+
+### Markdown Editor
+
+![Screenshot](doc/example-markdown-editor.png)
+
+[View in browser](https://aloisdeniel.github.io/flutter_omarchy/?app=markdown_editor) | [Code](example/lib/markdown_editor.dart)
+
+### Pomodoro
+
+![Screenshot](doc/example-pomodoro.png)
+
+[View in browser](https://aloisdeniel.github.io/flutter_omarchy/?app=pomodoro) | [Code](example/lib/pomodoro.dart)
 
 ## Roadmap & Ideas
 

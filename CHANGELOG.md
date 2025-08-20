@@ -1,3 +1,7 @@
+## 0.1.3
+
+* Fixed text input web plarform.
+
 ## 0.1.2
 
 * Fixed localization delegates on mobile.
