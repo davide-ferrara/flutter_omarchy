@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_omarchy/src/omarchy.dart';
+import 'package:flutter_omarchy/src/theme/theme.dart';
 import 'package:flutter_omarchy/src/widgets/utils/default_foreground.dart';
 import 'package:flutter_omarchy/src/widgets/utils/default_padding.dart';
 import 'package:flutter_omarchy/src/widgets/utils/pointer_area.dart';
@@ -20,9 +20,9 @@ class OmarchyTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final omarchy = Omarchy.of(context);
+    final theme = OmarchyTheme.of(context);
     return Container(
-      color: omarchy.theme.colors.normal.black,
+      color: theme.colors.normal.black,
       height: 44,
       child: DefaultPadding(
         padding: padding,
@@ -68,7 +68,7 @@ class OmarchyTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final omarchy = Omarchy.of(context);
+    final theme = OmarchyTheme.of(context);
     Widget child = Center(child: title);
     if (icon != null || close != null) {
       child = Row(
@@ -89,26 +89,24 @@ class OmarchyTab extends StatelessWidget {
         builder: (context, state, child) {
           final background = switch (state) {
             PointerState(isHovering: true) when isActive =>
-              omarchy.theme.colors.background,
-            PointerState(isHovering: true) => omarchy.theme.colors.bright.black,
-            _ when isActive => omarchy.theme.colors.background,
-            _ => omarchy.theme.colors.normal.black,
+              theme.colors.background,
+            PointerState(isHovering: true) => theme.colors.bright.black,
+            _ when isActive => theme.colors.background,
+            _ => theme.colors.normal.black,
           };
           final foreground = switch (state) {
             PointerState(isHovering: true) when isActive =>
-              omarchy.theme.colors.foreground,
-            PointerState(isHovering: true) => omarchy.theme.colors.bright.white,
-            _ when isActive => omarchy.theme.colors.foreground,
-            _ => omarchy.theme.colors.normal.white,
+              theme.colors.foreground,
+            PointerState(isHovering: true) => theme.colors.bright.white,
+            _ when isActive => theme.colors.foreground,
+            _ => theme.colors.normal.white,
           };
           return Container(
             decoration: BoxDecoration(color: background),
             padding: DefaultPadding.of(context),
             child: DefaultForeground(
               foreground: foreground,
-              textStyle: isActive
-                  ? omarchy.theme.text.italic
-                  : omarchy.theme.text.normal,
+              textStyle: isActive ? theme.text.italic : theme.text.normal,
               child: child!,
             ),
           );

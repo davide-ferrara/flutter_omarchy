@@ -1,5 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_omarchy/src/omarchy.dart';
 import 'package:flutter_omarchy/src/theme/theme.dart';
 
@@ -9,11 +10,13 @@ class OmarchyApp extends StatelessWidget {
     required this.home,
     this.debugShowCheckedModeBanner = kDebugMode,
     this.theme,
+    this.localizationsDelegates,
   });
 
   final bool debugShowCheckedModeBanner;
   final OmarchyThemeData? theme;
   final Widget home;
+  final Iterable<LocalizationsDelegate<dynamic>>? localizationsDelegates;
 
   static PageRoute<T> defaultPageRouteBuilder<T>(
     RouteSettings settings,
@@ -26,6 +29,14 @@ class OmarchyApp extends StatelessWidget {
     );
   }
 
+  Iterable<LocalizationsDelegate<dynamic>> get _localizationsDelegates {
+    return <LocalizationsDelegate<dynamic>>[
+      if (localizationsDelegates != null) ...localizationsDelegates!,
+      DefaultMaterialLocalizations.delegate,
+      DefaultCupertinoLocalizations.delegate,
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Omarchy(
@@ -35,6 +46,7 @@ class OmarchyApp extends StatelessWidget {
           final omarchy = Omarchy.of(context);
           return WidgetsApp(
             debugShowCheckedModeBanner: debugShowCheckedModeBanner,
+            localizationsDelegates: _localizationsDelegates,
             color: omarchy.theme.colors.border,
             pageRouteBuilder: defaultPageRouteBuilder,
             textStyle: omarchy.theme.text.normal.copyWith(

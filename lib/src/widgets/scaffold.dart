@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_omarchy/src/omarchy.dart';
+import 'package:flutter_omarchy/src/theme/theme.dart';
 import 'package:flutter_omarchy/src/widgets/resize_divider.dart';
 
 class OmarchyScaffold extends StatefulWidget {
@@ -29,7 +29,7 @@ class _OmarchyScaffoldState extends State<OmarchyScaffold> {
 
   @override
   Widget build(BuildContext context) {
-    final omarchy = Omarchy.of(context).theme;
+    final theme = OmarchyTheme.of(context);
     var child = widget.child;
 
     if (widget.navigationBar case final bar?) {
@@ -71,7 +71,7 @@ class _OmarchyScaffoldState extends State<OmarchyScaffold> {
     }
     return AnimatedContainer(
       duration: const Duration(milliseconds: 150),
-      color: omarchy.colors.background,
+      color: theme.colors.background,
       child: child,
     );
   }

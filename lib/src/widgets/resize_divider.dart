@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_omarchy/src/omarchy.dart';
+import 'package:flutter_omarchy/src/theme/theme.dart';
 import 'package:flutter_omarchy/src/widgets/utils/pointer_area.dart';
 
 class OmarchyResizeDivider extends StatefulWidget {
@@ -28,7 +28,7 @@ class _OmarchyResizeDividerState extends State<OmarchyResizeDivider> {
 
   @override
   Widget build(BuildContext context) {
-    final omarchy = Omarchy.of(context);
+    final theme = OmarchyTheme.of(context);
     return PointerArea(
       hoverCursor: SystemMouseCursors.resizeLeftRight,
       onPanStart: (_) {
@@ -56,9 +56,9 @@ class _OmarchyResizeDividerState extends State<OmarchyResizeDivider> {
           Axis.horizontal => double.infinity,
         },
         color: switch (pointer) {
-          PointerState(isPressed: true) => omarchy.theme.colors.bright.white,
-          PointerState(isHovering: true) => omarchy.theme.colors.bright.black,
-          _ => omarchy.theme.colors.normal.black,
+          PointerState(isPressed: true) => theme.colors.bright.white,
+          PointerState(isHovering: true) => theme.colors.bright.black,
+          _ => theme.colors.normal.black,
         },
       ),
     );

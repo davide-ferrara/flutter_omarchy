@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_omarchy/src/omarchy.dart';
+import 'package:flutter_omarchy/src/theme/theme.dart';
 
 class OmarchyLogo extends StatelessWidget {
   const OmarchyLogo({super.key, this.color, this.width});
@@ -12,7 +12,7 @@ class OmarchyLogo extends StatelessWidget {
     Widget result = FittedBox(
       child: CustomPaint(size: Size(1215, 285), painter: _Painter()),
     );
-    final color = this.color ?? Omarchy.of(context).theme.colors.foreground;
+    final color = this.color ?? OmarchyTheme.of(context).colors.foreground;
     result = ColorFiltered(
       colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
       child: result,

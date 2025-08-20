@@ -150,9 +150,9 @@ class FilledOmarchyButtonStyle extends OmarchyButtonStyle {
 
   @override
   OmarchyButtonStyleData resolve(BuildContext context) {
-    final omarchy = Omarchy.of(context).theme;
-    final bright = omarchy.colors.bright[accent];
-    final normal = omarchy.colors.normal[accent];
+    final theme = OmarchyTheme.of(context);
+    final bright = theme.colors.bright[accent];
+    final normal = theme.colors.normal[accent];
     return switch (accent) {
       // TODO
       _ => OmarchyButtonStyleData(
@@ -212,9 +212,9 @@ class OutlineOmarchyButtonStyle extends OmarchyButtonStyle {
 
   @override
   OmarchyButtonStyleData resolve(BuildContext context) {
-    final omarchy = Omarchy.of(context).theme;
-    final bright = omarchy.colors.bright[accent];
-    final normal = omarchy.colors.normal[accent];
+    final theme = OmarchyTheme.of(context);
+    final bright = theme.colors.bright[accent];
+    final normal = theme.colors.normal[accent];
     return switch (accent) {
       // TODO
       _ => OmarchyButtonStyleData(
@@ -270,9 +270,9 @@ class BarOmarchyButtonStyle extends OmarchyButtonStyle {
 
   @override
   OmarchyButtonStyleData resolve(BuildContext context) {
-    final omarchy = Omarchy.of(context).theme;
-    final bright = omarchy.colors.bright[accent];
-    final normal = omarchy.colors.normal[accent];
+    final theme = OmarchyTheme.of(context);
+    final bright = theme.colors.bright[accent];
+    final normal = theme.colors.normal[accent];
     return switch (accent) {
       _ => OmarchyButtonStyleData(
         borderWidth: 0,

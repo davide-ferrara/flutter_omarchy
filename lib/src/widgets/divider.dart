@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_omarchy/src/omarchy.dart';
+import 'package:flutter_omarchy/src/theme/theme.dart';
 
 class OmarchyDivider extends StatelessWidget {
   const OmarchyDivider({super.key, this.direction});
@@ -9,7 +9,7 @@ class OmarchyDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final omarchy = Omarchy.of(context);
+    final theme = OmarchyTheme.of(context);
     final direction = this.direction ?? Axis.vertical;
     return Container(
       width: switch (direction) {
@@ -20,7 +20,7 @@ class OmarchyDivider extends StatelessWidget {
         Axis.horizontal => double.infinity,
         Axis.vertical => 1.0,
       },
-      color: omarchy.theme.colors.normal.black,
+      color: theme.colors.normal.black,
     );
   }
 }

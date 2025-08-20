@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_omarchy/src/omarchy.dart';
 import 'package:flutter_omarchy/src/theme/colors.dart';
+import 'package:flutter_omarchy/src/theme/theme.dart';
 import 'package:flutter_omarchy/src/widgets/utils/default_foreground.dart';
 import 'package:flutter_omarchy/src/widgets/utils/grouping.dart';
 import 'package:flutter_omarchy/src/widgets/utils/pointer_area.dart';
@@ -14,9 +14,9 @@ class OmarchyStatusBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final omarchy = Omarchy.of(context);
+    final theme = OmarchyTheme.of(context);
     return Container(
-      color: omarchy.theme.colors.normal.black,
+      color: theme.colors.normal.black,
       child: DefaultTextStyle(
         style: DefaultTextStyle.of(context).style,
         maxLines: 1,
@@ -66,9 +66,9 @@ class OmarchyStatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final omarchy = Omarchy.of(context);
-    final normal = omarchy.theme.colors.normal[accent];
-    final bright = omarchy.theme.colors.bright[accent];
+    final theme = OmarchyTheme.of(context);
+    final normal = theme.colors.normal[accent];
+    final bright = theme.colors.bright[accent];
     if (onTap != null) {
       return PointerArea(
         onTap: onTap,

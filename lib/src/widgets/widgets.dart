@@ -5,6 +5,7 @@ export 'utils/pointer_area.dart';
 export 'button.dart';
 export 'resize_divider.dart';
 export 'checkbox.dart';
+export 'progress_bar.dart';
 export 'scaffold.dart';
 export 'loader.dart';
 export 'logo.dart';
