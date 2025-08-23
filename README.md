@@ -83,6 +83,17 @@ final border = theme.colors.border; // The walker border color
 final body = theme.text.normal.copyWith(color: red); // The text style
 ```
 
+#### ANSI colors
+
+Since Omarchy is heavily inspired by terminal aesthetics, the theme an `AnsiColor` enum to represent one of the eight main colors of the terminal. You can extract the normal or bright variant of a color from the theme:
+
+```dart
+final accent = AnsiColor.cyan;
+final theme = OmarchyTheme.of(context);
+final accentNormal = theme.colors.normal[accent];
+final accentBright = theme.colors.bright[accent];
+```
+
 ### Widgets
 
 Omarchy provides a rich set of widgets:
@@ -186,13 +197,13 @@ flutter run --app=pomodoro
 
 ![Screenshot](doc/example-qrcode.png)
 
-[View in browser](https://aloisdeniel.github.io/flutter_omarchy/?app=qr_code_generator) | [Code](example/lib/counter.dart)
+[View in browser](https://aloisdeniel.github.io/flutter_omarchy/?app=qr_code_generator) | [Code](example/lib/qr_code_generator.dart)
 
 ### File Explorer
 
 ![Screenshot](doc/example-file-explorer.png)
 
-[View in browser](https://aloisdeniel.github.io/flutter_omarchy/?app=file_explorer) | [Code](example/lib/pomodoro.dart)
+[View in browser](https://aloisdeniel.github.io/flutter_omarchy/?app=file_explorer) | [Code](example/lib/file_explorer.dart)
 
 ### Markdown Editor
 

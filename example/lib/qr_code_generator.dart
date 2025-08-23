@@ -175,150 +175,206 @@ class _HomePageState extends State<HomePage> {
           OmarchyDivider(),
           Padding(
             padding: const EdgeInsets.all(14.0),
-            child: Row(
-              spacing: 8,
-              children: [
-                Expanded(
-                  key: Key('text_input'),
-                  child: OmarchyInputContainer(
-                    builder: (context, focusNode) => OmarchyTextInput(
-                      focusNode: focusNode,
-                      controller: _input,
-                      placeholder: Text('Enter text to generate QR code'),
-                    ),
-                  ),
-                ),
-                OmarchyPopOver(
-                  key: Key('color_input'),
-                  popOverAnchor: Alignment.bottomRight,
-                  childAnchor: Alignment.bottomRight,
-                  popOverBuilder: (context, size, hide) {
-                    return OmarchyPopOverContainer(
-                      alignment: Alignment.bottomRight,
-                      maxWidth: 100,
-                      maxHeight: 540,
-                      child: ListView(
-                        shrinkWrap: true,
-                        children: [
-                          for (final v in [null, ...AnsiColor.values])
-                            Selected(
-                              isSelected: _color == v,
-                              child: OmarchyTile(
-                                title: ColorBox(color: v, theme: theme),
-                                onTap: () {
-                                  _color = v;
-                                  _generate();
-                                  hide();
-                                },
-                              ),
-                            ),
-                        ],
-                      ),
-                    );
-                  },
-                  builder: (context, show) => OmarchyInputContainer(
-                    builder: (context, focusNode) => OmarchyButton(
-                      focusNode: focusNode,
-                      borderWidth: 0.0,
-                      onPressed: show,
-                      child: SizedBox(
-                        width: 52,
-                        child: ColorBox(color: _color, theme: theme),
-                      ),
-                    ),
-                  ),
-                ),
-                OmarchyPopOver(
-                  key: Key('type_number_input'),
-                  popOverAnchor: Alignment.bottomRight,
-                  childAnchor: Alignment.bottomRight,
-                  popOverBuilder: (context, size, hide) {
-                    return OmarchyPopOverContainer(
-                      alignment: Alignment.bottomRight,
-                      maxWidth: 60,
-                      maxHeight: 540,
-                      child: ListView(
-                        shrinkWrap: true,
-                        children: [
-                          for (var v = 1; v <= 40; v++)
-                            Selected(
-                              isSelected: _typeNumber == v,
-                              child: OmarchyTile(
-                                title: Text(v.toString()),
-                                onTap: () {
-                                  _typeNumber = v;
-                                  _generate();
-                                  hide();
-                                },
-                              ),
-                            ),
-                        ],
-                      ),
-                    );
-                  },
-                  builder: (context, show) => OmarchyInputContainer(
-                    builder: (context, focusNode) => OmarchyButton(
-                      focusNode: focusNode,
-                      borderWidth: 0.0,
-                      onPressed: show,
-                      child: Text(_typeNumber.toString()),
-                    ),
-                  ),
-                ),
-                OmarchyPopOver(
-                  key: Key('error_correct_level_input'),
-                  popOverAnchor: Alignment.bottomRight,
-                  childAnchor: Alignment.bottomRight,
-                  popOverBuilder: (context, size, hide) {
-                    return OmarchyPopOverContainer(
-                      alignment: Alignment.bottomRight,
-                      maxWidth: 140,
-                      maxHeight: 500,
-                      child: ListView(
-                        shrinkWrap: true,
-                        children: [
-                          for (final v in QrErrorCorrectLevel.levels)
-                            Selected(
-                              isSelected: _errorCorrectLevel == v,
-                              child: OmarchyTile(
-                                title: Text(QrErrorCorrectLevel.getName(v)),
-                                onTap: () {
-                                  _errorCorrectLevel = v;
-                                  _generate();
-                                  hide();
-                                },
-                              ),
-                            ),
-                        ],
-                      ),
-                    );
-                  },
-                  builder: (context, show) => OmarchyInputContainer(
-                    builder: (context, focusNode) => OmarchyButton(
-                      focusNode: focusNode,
-                      borderWidth: 0.0,
-                      onPressed: show,
-                      child: Text(
-                        QrErrorCorrectLevel.getName(_errorCorrectLevel),
-                      ),
-                    ),
-                  ),
-                ),
-                OmarchyButton(
-                  style: OmarchyButtonStyle.filled(AnsiColor.green),
-                  onPressed: _squares.isNotEmpty
-                      ? () => _captureAndSave(context)
-                      : null,
-                  child: Row(
-                    spacing: 4,
-                    children: [Text('Copy'), Icon(OmarchyIcons.codCopy)],
-                  ),
-                ),
-              ],
+            child: _ToolBar(
+              input: _input,
+              color: _color,
+              errorCorrectLevel: _errorCorrectLevel,
+              typeNumber: _typeNumber,
+              onCopy: _squares.isNotEmpty
+                  ? () => _captureAndSave(context)
+                  : null,
+              onErrorCorrectLevelChanged: (v) {
+                _errorCorrectLevel = v;
+                _generate();
+              },
+              onTypeNumberChanged: (v) {
+                _typeNumber = v;
+                _generate();
+              },
+              onColorChanged: (v) {
+                _color = v;
+                _generate();
+              },
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ToolBar extends StatelessWidget {
+  const _ToolBar({
+    required this.input,
+    required this.color,
+    required this.onColorChanged,
+    required this.typeNumber,
+    required this.errorCorrectLevel,
+    required this.onTypeNumberChanged,
+    required this.onCopy,
+    required this.onErrorCorrectLevelChanged,
+  });
+  final TextEditingController input;
+  final AnsiColor? color;
+  final ValueChanged<AnsiColor?> onColorChanged;
+  final int typeNumber;
+  final ValueChanged<int> onTypeNumberChanged;
+  final int errorCorrectLevel;
+  final ValueChanged<int> onErrorCorrectLevelChanged;
+  final VoidCallback? onCopy;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = OmarchyTheme.of(context);
+    final textInput = OmarchyInputContainer(
+      builder: (context, focusNode) => OmarchyTextInput(
+        focusNode: focusNode,
+        controller: input,
+        placeholder: Text('Enter text to generate QR code'),
+      ),
+    );
+    final options = <Widget>[
+      OmarchyPopOver(
+        key: Key('color_input'),
+        popOverAnchor: Alignment.bottomRight,
+        childAnchor: Alignment.bottomRight,
+        popOverBuilder: (context, size, hide) {
+          return OmarchyPopOverContainer(
+            alignment: Alignment.bottomRight,
+            maxWidth: 100,
+            maxHeight: 540,
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                for (final v in [null, ...AnsiColor.values])
+                  Selected(
+                    isSelected: color == v,
+                    child: OmarchyTile(
+                      title: ColorBox(color: v, theme: theme),
+                      onTap: () {
+                        onColorChanged(v);
+                        hide();
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+        builder: (context, show) => OmarchyInputContainer(
+          builder: (context, focusNode) => OmarchyButton(
+            focusNode: focusNode,
+            borderWidth: 0.0,
+            onPressed: show,
+            child: SizedBox(
+              width: 52,
+              child: ColorBox(color: color, theme: theme),
+            ),
+          ),
+        ),
+      ),
+      OmarchyPopOver(
+        key: Key('type_number_input'),
+        popOverAnchor: Alignment.bottomRight,
+        childAnchor: Alignment.bottomRight,
+        popOverBuilder: (context, size, hide) {
+          return OmarchyPopOverContainer(
+            alignment: Alignment.bottomRight,
+            maxWidth: 60,
+            maxHeight: 540,
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                for (var v = 1; v <= 40; v++)
+                  Selected(
+                    isSelected: typeNumber == v,
+                    child: OmarchyTile(
+                      title: Text(v.toString()),
+                      onTap: () {
+                        onTypeNumberChanged(v);
+                        hide();
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+        builder: (context, show) => OmarchyInputContainer(
+          builder: (context, focusNode) => OmarchyButton(
+            focusNode: focusNode,
+            borderWidth: 0.0,
+            onPressed: show,
+            child: Text(typeNumber.toString()),
+          ),
+        ),
+      ),
+      OmarchyPopOver(
+        key: Key('error_correct_level_input'),
+        popOverAnchor: Alignment.bottomRight,
+        childAnchor: Alignment.bottomRight,
+        popOverBuilder: (context, size, hide) {
+          return OmarchyPopOverContainer(
+            alignment: Alignment.bottomRight,
+            maxWidth: 140,
+            maxHeight: 500,
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                for (final v in QrErrorCorrectLevel.levels)
+                  Selected(
+                    isSelected: errorCorrectLevel == v,
+                    child: OmarchyTile(
+                      title: Text(QrErrorCorrectLevel.getName(v)),
+                      onTap: () {
+                        onErrorCorrectLevelChanged(v);
+                        hide();
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+        builder: (context, show) => OmarchyInputContainer(
+          builder: (context, focusNode) => OmarchyButton(
+            focusNode: focusNode,
+            borderWidth: 0.0,
+            onPressed: show,
+            child: Text(QrErrorCorrectLevel.getName(errorCorrectLevel)),
+          ),
+        ),
+      ),
+    ];
+    final copyButton = OmarchyButton(
+      style: OmarchyButtonStyle.filled(AnsiColor.green),
+      onPressed: onCopy,
+      child: Row(
+        spacing: 4,
+        children: [Text('Copy'), Icon(OmarchyIcons.codCopy)],
+      ),
+    );
+    return LayoutBuilder(
+      builder: (context, layout) {
+        if (layout.maxWidth < 500) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 8,
+            children: [
+              textInput,
+              Row(children: [...options, Spacer(), copyButton]),
+            ],
+          );
+        }
+        return Row(
+          spacing: 8,
+          children: [
+            Expanded(key: Key('text_input'), child: textInput),
+            ...options,
+            copyButton,
+          ],
+        );
+      },
     );
   }
 }
