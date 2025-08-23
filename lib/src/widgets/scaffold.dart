@@ -1,22 +1,28 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_omarchy/src/theme/theme.dart';
-import 'package:flutter_omarchy/src/widgets/resize_divider.dart';
+import 'package:flutter_omarchy/src/widgets/side_panel.dart';
+import 'package:flutter_omarchy/src/widgets/utils/panel_size.dart';
+import 'package:flutter_omarchy/src/widgets/widgets.dart';
 
-typedef OmarchyScaffoldLeadingMenuState = ({bool isHidden, double width});
+typedef OmarchyScaffoldLeadingMenuState = ({
+  bool isHidden,
+  OmarchySidePanelController hiddenController,
+});
 
 class OmarchyScaffold extends StatefulWidget {
   const OmarchyScaffold({
     super.key,
     required this.child,
-    this.leadingMenu,
+    this.leadingPanel,
     this.navigationBar,
     this.status,
-    this.minLeadingMenuWidth = 50.0,
-    this.maxLeadingMenuWidth = 500.0,
-    this.hideLeadingMenuUnderWidth,
+    this.panelInitialSize = const PanelSize.ratio(0.3),
+    this.maxPanelSize = const PanelSize.absolute(400),
+    this.minPanelSize = const PanelSize.absolute(200),
+    this.hideLeadingMenuUnderWidth = 500.0,
   });
 
-  static OmarchyScaffoldLeadingMenuState? leadingMenuMaybeOf(
+  static OmarchyScaffoldLeadingMenuState? leadingPanelMaybeOf(
     BuildContext context,
   ) {
     return context
@@ -24,57 +30,36 @@ class OmarchyScaffold extends StatefulWidget {
         ?.state;
   }
 
-  static OmarchyScaffoldLeadingMenuState leadingMenuOf(BuildContext context) {
-    return leadingMenuMaybeOf(context)!;
-  }
-
-  /// If the leading menu is hidden, this will show it modally.
-  static Future<void> showLeadingMenu(BuildContext context) {
-    final inherited = context
-        .dependOnInheritedWidgetOfExactType<_LeadingMenuStateProvider>();
-    if (inherited != null) {
-      inherited.show();
-    }
-    return Future.value();
-  }
-
-  static Future<void> hideLeadingMenu(BuildContext context) {
-    final inherited = context
-        .dependOnInheritedWidgetOfExactType<_LeadingMenuStateProvider>();
-    if (inherited != null) {
-      inherited.hide();
-    }
-    return Future.value();
+  static OmarchyScaffoldLeadingMenuState leadingPanelOf(BuildContext context) {
+    return leadingPanelMaybeOf(context)!;
   }
 
   final Widget child;
-  final Widget? leadingMenu;
+  final Widget? leadingPanel;
   final Widget? navigationBar;
   final Widget? status;
-  final double minLeadingMenuWidth;
-  final double maxLeadingMenuWidth;
+  final PanelSize panelInitialSize;
+  final PanelSize? minPanelSize;
+  final PanelSize? maxPanelSize;
 
   /// If null, default to a third of the scaffold's width.
   ///
   /// If 0, then always show the leading menu.
-  final double? hideLeadingMenuUnderWidth;
+  final double hideLeadingMenuUnderWidth;
 
   @override
   State<OmarchyScaffold> createState() => _OmarchyScaffoldState();
 }
 
 class _OmarchyScaffoldState extends State<OmarchyScaffold> {
-  var leadingMenuWidth = 300.0;
   final contentKey = GlobalKey();
   final menuKey = GlobalKey();
-  final overlayController = OverlayPortalController();
+  final controller = OmarchySidePanelController();
 
-  void showLeadingMenu() {
-    if (!overlayController.isShowing) overlayController.show();
-  }
-
-  void hideLeadingMenu() {
-    if (overlayController.isShowing) overlayController.hide();
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -83,10 +68,8 @@ class _OmarchyScaffoldState extends State<OmarchyScaffold> {
     return LayoutBuilder(
       builder: (context, layout) {
         var child = widget.child;
-        final hideLeadingMenuUnderWidth =
-            widget.hideLeadingMenuUnderWidth ?? layout.maxWidth / 3;
         final isLeadingMenuHidden =
-            leadingMenuWidth >= hideLeadingMenuUnderWidth;
+            layout.maxWidth < widget.hideLeadingMenuUnderWidth;
 
         if (widget.navigationBar case final bar?) {
           child = Column(
@@ -97,71 +80,20 @@ class _OmarchyScaffoldState extends State<OmarchyScaffold> {
             ],
           );
         }
-        if (widget.leadingMenu case final menu?) {
+        if (widget.leadingPanel case final panel?) {
           if (!isLeadingMenuHidden) {
-            child = Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(key: menuKey, width: leadingMenuWidth, child: menu),
-                OmarchyResizeDivider(
-                  key: Key('divider'),
-                  min: widget.minLeadingMenuWidth,
-                  max: widget.maxLeadingMenuWidth,
-                  size: leadingMenuWidth,
-                  onSizeChanged: (v) => setState(() {
-                    leadingMenuWidth = v;
-                  }),
-                ),
-                Expanded(key: contentKey, child: child),
-              ],
+            child = OmarchySplitPanel(
+              panelInitialSize: widget.panelInitialSize,
+              minPanelSize: widget.minPanelSize,
+              maxPanelSize: widget.maxPanelSize,
+              panel: panel,
+              child: child,
             );
           } else {
-            child = OverlayPortal(
-              controller: overlayController,
-              overlayChildBuilder: (context) {
-                return Positioned.fill(
-                  child: _LeadingMenuStateProvider(
-                    state: (
-                      isHidden: isLeadingMenuHidden,
-                      width: leadingMenuWidth,
-                    ),
-                    show: showLeadingMenu,
-                    hide: hideLeadingMenu,
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: Container(
-                            color: const Color(0x33000000),
-                            child: GestureDetector(
-                              onTap: () {
-                                if (overlayController.isShowing) {
-                                  overlayController.hide();
-                                }
-                              },
-                            ),
-                          ),
-                        ),
-                        Positioned.fill(
-                          right: 64,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: theme.colors.background,
-                              border: Border(
-                                right: BorderSide(
-                                  color: theme.colors.border,
-                                  width: 2,
-                                ),
-                              ),
-                            ),
-                            child: menu,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-              child: KeyedSubtree(key: contentKey, child: child),
+            child = OmarchySidePanel(
+              controller: controller,
+              panel: panel,
+              child: child,
             );
           }
         }
@@ -176,9 +108,7 @@ class _OmarchyScaffoldState extends State<OmarchyScaffold> {
           );
         }
         return _LeadingMenuStateProvider(
-          state: (isHidden: isLeadingMenuHidden, width: leadingMenuWidth),
-          show: showLeadingMenu,
-          hide: hideLeadingMenu,
+          state: (isHidden: isLeadingMenuHidden, hiddenController: controller),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             color: theme.colors.background,
@@ -191,18 +121,10 @@ class _OmarchyScaffoldState extends State<OmarchyScaffold> {
 }
 
 class _LeadingMenuStateProvider extends InheritedWidget {
-  const _LeadingMenuStateProvider({
-    required this.state,
-    required super.child,
-    required this.hide,
-    required this.show,
-  });
+  const _LeadingMenuStateProvider({required super.child, required this.state});
   final OmarchyScaffoldLeadingMenuState state;
-  final VoidCallback show;
-  final VoidCallback hide;
-
   @override
   bool updateShouldNotify(covariant _LeadingMenuStateProvider oldWidget) {
-    return state != oldWidget.state;
+    return oldWidget.state != state;
   }
 }

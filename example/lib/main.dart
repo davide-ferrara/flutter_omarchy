@@ -10,12 +10,14 @@ import 'package:example/gallery.dart';
 import 'package:example/markdown_editor.dart';
 import 'package:example/omarchy_preview.dart';
 import 'package:example/pomodoro.dart';
+import 'package:example/qr_code_generator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
 
 enum App {
   gallery,
   counter,
+  qr_code_generator,
   calculator,
   file_explorer,
   markdown_editor,
@@ -23,8 +25,9 @@ enum App {
 
   Widget build() {
     return switch (this) {
-      App.counter => const CounterApp(),
       App.gallery => const GalleryApp(),
+      App.counter => const CounterApp(),
+      App.qr_code_generator => const QrCodeGeneratorApp(),
       App.calculator => const CalculatorApp(),
       App.file_explorer => const FileExplorerApp(),
       App.markdown_editor => const MarkdownEditorApp(),
@@ -39,7 +42,7 @@ Future<void> main(List<String> args) async {
   // For web we pass query parameters as command line arguments
   if (kIsWeb) {
     for (final entry in Uri.base.queryParameters.entries) {
-      effectiveArgs.add('--${entry.key}');
+      effectiveArgs.add('');
       effectiveArgs.add(entry.value);
     }
   }
@@ -48,7 +51,7 @@ Future<void> main(List<String> args) async {
   parser.addFlag('preview', defaultsTo: kIsWeb || !Platform.isLinux);
   parser.addOption(
     'app',
-    defaultsTo: App.pomodoro.name,
+    defaultsTo: App.gallery.name,
     allowed: App.values.map((x) => x.name),
   );
   final result = parser.parse(effectiveArgs);

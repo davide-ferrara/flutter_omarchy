@@ -37,21 +37,22 @@ class _HomePageState extends State<HomePage> {
     return OmarchyScaffold(
       navigationBar: Builder(
         builder: (context) {
+          final sidePanel = OmarchyScaffold.leadingPanelOf(context);
           return OmarchyNavigationBar(
             title: Text('Omarchy Gallery'),
             leading: [
-              if (OmarchyScaffold.leadingMenuOf(context).isHidden)
+              if (sidePanel.isHidden)
                 OmarchyButton(
                   child: Icon(OmarchyIcons.codMenu),
                   onPressed: () {
-                    OmarchyScaffold.showLeadingMenu(context);
+                    sidePanel.hiddenController.isVisible = true;
                   },
                 ),
             ],
           );
         },
       ),
-      leadingMenu: Menu(
+      leadingPanel: Menu(
         selected: selected,
         sections: sections,
         onSectionSelected: (value) {
@@ -79,6 +80,7 @@ class Menu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sidePanel = OmarchyScaffold.leadingPanelOf(context);
     return SizedBox(
       width: 200,
       child: ListView(
@@ -89,7 +91,9 @@ class Menu extends StatelessWidget {
               child: OmarchyTile(
                 onTap: () {
                   onSectionSelected(item.$2);
-                  OmarchyScaffold.hideLeadingMenu(context);
+                  if (sidePanel.isHidden) {
+                    sidePanel.hiddenController.isVisible = false;
+                  }
                 },
                 title: Text(item.$1),
               ),
@@ -421,11 +425,44 @@ class WidgetsPage extends StatelessWidget {
                         ),
                       ),
                       child: OmarchyScaffold(
-                        leadingMenu: Center(child: Text('Leading Menu')),
+                        leadingPanel: Center(child: Text('Leading Menu')),
                         status: OmarchyStatusBar(
                           leading: [OmarchyStatus(child: Text('Status'))],
                         ),
                         child: Center(child: Text('Content')),
+                      ),
+                    ),
+                  ],
+                ),
+                Section(
+                  title: 'SplitPanel',
+                  children: [
+                    Container(
+                      width: 400,
+                      height: 320,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: omarchy.theme.colors.normal.black,
+                        ),
+                      ),
+                      child: OmarchySplitPanel(
+                        panel: Center(child: Text('Points panel (200)')),
+                        child: Center(child: Text('Child')),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      width: 400,
+                      height: 320,
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: omarchy.theme.colors.normal.black,
+                        ),
+                      ),
+                      child: OmarchySplitPanel(
+                        panelInitialSize: PanelSize.ratio(0.5),
+                        panel: Center(child: Text('Ratio panel (0.5)')),
+                        child: Center(child: Text('Child')),
                       ),
                     ),
                   ],

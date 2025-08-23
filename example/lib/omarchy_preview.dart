@@ -1,5 +1,6 @@
 import 'package:example/main.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// All the sample apps in a simulated Omarchy desktop.
 ///
@@ -30,7 +31,13 @@ class _OmarchyPreviewState extends State<OmarchyPreview> {
               scrollDirection: Axis.horizontal,
               children: [
                 PointerArea(
-                  onTap: () {},
+                  onTap: () {
+                    launchUrl(
+                      Uri.parse(
+                        'https://github.com/aloisdeniel/flutter_omarchy',
+                      ),
+                    );
+                  },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
                     child: Center(

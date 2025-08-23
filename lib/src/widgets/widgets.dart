@@ -19,3 +19,4 @@ export 'icon_data.g.dart';
 export 'tooltip.dart';
 export 'input_container.dart';
 export 'text_input.dart';
+export 'split_panel.dart';

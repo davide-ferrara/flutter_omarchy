@@ -10,13 +10,20 @@ class OmarchyResizeDivider extends StatefulWidget {
     required this.min,
     required this.max,
     required this.onSizeChanged,
-    this.direction = Axis.horizontal,
+    this.orientation = Axis.horizontal,
   });
 
-  final Axis direction;
+  static double calculateSize(BuildContext context) {
+    // TODO mobile responsive
+    return 5;
+  }
+
+  final Axis orientation;
   final double size;
   final double min;
   final double max;
+
+  /// The delta that must be added to the current size.
   final ValueChanged<double> onSizeChanged;
 
   @override
@@ -35,23 +42,23 @@ class _OmarchyResizeDividerState extends State<OmarchyResizeDivider> {
         current = widget.size;
       },
       onPanUpdate: (details) {
-        final delta = switch (widget.direction) {
+        final delta = switch (widget.orientation) {
           Axis.horizontal => details.delta.dx,
           Axis.vertical => details.delta.dy,
         };
-        current = (current + delta).clamp(widget.min, widget.max);
-        widget.onSizeChanged(current);
+        widget.onSizeChanged(delta);
       },
       builder: (context, pointer, _) => Container(
-        margin: switch (widget.direction) {
+        margin: switch (widget.orientation) {
           Axis.horizontal => EdgeInsets.symmetric(horizontal: 2.0),
           Axis.vertical => EdgeInsets.symmetric(vertical: 2.0),
         },
-        width: switch (widget.direction) {
+        // TODO mobile responsive
+        width: switch (widget.orientation) {
           Axis.horizontal => 1,
           Axis.vertical => double.infinity,
         },
-        height: switch (widget.direction) {
+        height: switch (widget.orientation) {
           Axis.vertical => 1,
           Axis.horizontal => double.infinity,
         },

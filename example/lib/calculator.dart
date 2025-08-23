@@ -22,86 +22,28 @@ class CalculatorPage extends StatefulWidget {
 }
 
 class _CalculatorPageState extends State<CalculatorPage> {
-  String _display = '0';
-  String _currentValue = '';
-  String _operation = '';
-  double _firstOperand = 0;
-  bool _clearOnNextInput = true;
-
-  void _onDigitPressed(String digit) {
-    setState(() {
-      if (_clearOnNextInput) {
-        _display = digit;
-        _clearOnNextInput = false;
-      } else {
-        _display = _display == '0' ? digit : _display + digit;
-      }
-      _currentValue = _display;
-    });
-  }
-
-  void _onOperationPressed(String operation) {
-    setState(() {
-      _firstOperand = double.parse(_display);
-      _operation = operation;
-      _clearOnNextInput = true;
-    });
-  }
-
-  void _onEqualsPressed() {
-    if (_operation.isEmpty) return;
-
-    final secondOperand = double.parse(_currentValue);
-    double result;
-
-    switch (_operation) {
-      case '+':
-        result = _firstOperand + secondOperand;
-        break;
-      case '-':
-        result = _firstOperand - secondOperand;
-        break;
-      case '×':
-        result = _firstOperand * secondOperand;
-        break;
-      case '÷':
-        result = _firstOperand / secondOperand;
-        break;
-      default:
-        return;
-    }
-
-    setState(() {
-      _display = result.toString();
-      if (_display.endsWith('.0')) {
-        _display = _display.substring(0, _display.length - 2);
-      }
-      _operation = '';
-      _clearOnNextInput = true;
-    });
-  }
-
-  void _onClearPressed() {
-    setState(() {
-      _display = '0';
-      _currentValue = '';
-      _operation = '';
-      _firstOperand = 0;
-      _clearOnNextInput = true;
-    });
-  }
+  final engine = CalculatorEngine();
 
   @override
   Widget build(BuildContext context) {
     final theme = OmarchyTheme.of(context);
+
+    const rows = <List<CalculatorAction>>[
+      [ClearAll(), ClearEntry(), Percent(), Operator.divide()],
+      [Digit(7), Digit(8), Digit(9), Operator.multiply()],
+      [Digit(4), Digit(5), Digit(6), Operator.minus()],
+      [Digit(1), Digit(2), Digit(3), Operator.plus()],
+      [ToggleSign(), Digit(0), DecimalPoint(), Equals()],
+    ];
+
     return OmarchyScaffold(
       navigationBar: const OmarchyNavigationBar(title: Text('Calculator')),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              alignment: Alignment.centerRight,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
               margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
@@ -109,10 +51,23 @@ class _CalculatorPageState extends State<CalculatorPage> {
                 borderRadius: BorderRadius.circular(2),
                 border: Border.all(color: theme.colors.border),
               ),
-              child: Text(
-                _display,
-                style: const TextStyle(fontSize: 48),
-                textAlign: TextAlign.right,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    engine.historyDisplay,
+                    style: theme.text.italic.copyWith(
+                      fontSize: 12,
+                      color: theme.colors.bright.black,
+                    ),
+                    textAlign: TextAlign.right,
+                  ),
+                  Text(
+                    engine.display,
+                    style: const TextStyle(fontSize: 48),
+                    textAlign: TextAlign.right,
+                  ),
+                ],
               ),
             ),
             Expanded(
@@ -120,108 +75,23 @@ class _CalculatorPageState extends State<CalculatorPage> {
                 spacing: CalculatorApp.buttonSpacing,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: Row(
-                      spacing: CalculatorApp.buttonSpacing,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        CalculatorButton(
-                          '7',
-                          onPressed: () => _onDigitPressed('7'),
-                        ),
-                        CalculatorButton(
-                          '8',
-                          onPressed: () => _onDigitPressed('8'),
-                        ),
-                        CalculatorButton(
-                          '9',
-                          onPressed: () => _onDigitPressed('9'),
-                        ),
-                        CalculatorButton(
-                          '÷',
-                          onPressed: () => _onOperationPressed('÷'),
-                          color: AnsiColor.cyan,
-                        ),
-                      ],
+                  for (final row in rows)
+                    Expanded(
+                      child: Row(
+                        spacing: CalculatorApp.buttonSpacing,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: row.map((action) {
+                          return CalculatorButton(
+                            action,
+                            onPressed: () {
+                              setState(() {
+                                engine.execute(action);
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: Row(
-                      spacing: CalculatorApp.buttonSpacing,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        CalculatorButton(
-                          '4',
-                          onPressed: () => _onDigitPressed('4'),
-                        ),
-                        CalculatorButton(
-                          '5',
-                          onPressed: () => _onDigitPressed('5'),
-                        ),
-                        CalculatorButton(
-                          '6',
-                          onPressed: () => _onDigitPressed('6'),
-                        ),
-                        CalculatorButton(
-                          '×',
-                          onPressed: () => _onOperationPressed('×'),
-                          color: AnsiColor.cyan,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: Row(
-                      spacing: CalculatorApp.buttonSpacing,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        CalculatorButton(
-                          '1',
-                          onPressed: () => _onDigitPressed('1'),
-                        ),
-                        CalculatorButton(
-                          '2',
-                          onPressed: () => _onDigitPressed('2'),
-                        ),
-                        CalculatorButton(
-                          '3',
-                          onPressed: () => _onDigitPressed('3'),
-                        ),
-                        CalculatorButton(
-                          '-',
-                          onPressed: () => _onOperationPressed('-'),
-                          color: AnsiColor.cyan,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: Row(
-                      spacing: CalculatorApp.buttonSpacing,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        CalculatorButton(
-                          'C',
-                          onPressed: _onClearPressed,
-                          color: AnsiColor.red,
-                        ),
-                        CalculatorButton(
-                          '0',
-                          onPressed: () => _onDigitPressed('0'),
-                        ),
-                        CalculatorButton(
-                          '=',
-                          onPressed: _onEqualsPressed,
-                          color: AnsiColor.green,
-                        ),
-                        CalculatorButton(
-                          '+',
-                          onPressed: () => _onOperationPressed('+'),
-                          color: AnsiColor.cyan,
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -233,16 +103,21 @@ class _CalculatorPageState extends State<CalculatorPage> {
 }
 
 class CalculatorButton extends StatelessWidget {
-  const CalculatorButton(
-    this.text, {
-    super.key,
-    required this.onPressed,
-    this.color = AnsiColor.white,
-  });
+  const CalculatorButton(this.action, {super.key, required this.onPressed});
 
-  final String text;
+  final CalculatorAction action;
   final VoidCallback onPressed;
-  final AnsiColor color;
+  AnsiColor get color => switch (action) {
+    ClearAll() => AnsiColor.red,
+    ClearEntry() => AnsiColor.red,
+    Backspace() => AnsiColor.magenta,
+    ToggleSign() => AnsiColor.blue,
+    Percent() => AnsiColor.cyan,
+    Equals() => AnsiColor.green,
+    Digit() => AnsiColor.white,
+    DecimalPoint() => AnsiColor.white,
+    Operator() => AnsiColor.yellow,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -250,9 +125,450 @@ class CalculatorButton extends StatelessWidget {
       child: OmarchyButton(
         style: OmarchyButtonStyle.filled(color),
         onPressed: onPressed,
-        child: Center(child: Text(text, style: TextStyle(fontSize: 32))),
+        child: Center(
+          child: Text(action.toString(), style: TextStyle(fontSize: 32)),
+        ),
       ),
     );
   }
+}
+
+/// A lightweight calculator engine that records every action and
+/// derives the current result from that history.
+///
+/// Usage example:
+/// ```dart
+/// final calc = CalculatorEngine();
+/// calc.execute(Digit(1));
+/// calc.execute(Digit(2));
+/// calc.execute(Operator.plus());
+/// calc.execute(Digit(7));
+/// calc.execute(Operator.multiply());
+/// calc.execute(Digit(3));
+/// calc.execute(Equals());
+/// print(calc.display);          // "33"
+/// print(calc.historyDisplay);   // "12 + 7 × 3 = 33"
+/// ```
+
+// -----------------------------
+// Actions (user intents)
+// -----------------------------
+
+/// Base class for calculator actions.
+sealed class CalculatorAction {
+  const CalculatorAction();
+}
+
+/// 0–9 digit input
+class Digit extends CalculatorAction {
+  final int value; // must be 0..9
+  const Digit(this.value) : assert(value >= 0 && value <= 9);
+
+  @override
+  String toString() {
+    return value.toString();
+  }
+}
+
+/// Decimal point input (".")
+class DecimalPoint extends CalculatorAction {
+  const DecimalPoint();
+
+  @override
+  String toString() {
+    return '.';
+  }
+}
+
+/// Binary operators: +, -, ×, ÷
+class Operator extends CalculatorAction {
+  final OperatorType type;
+  const Operator(this.type);
+
+  const Operator.plus() : type = OperatorType.plus;
+  const Operator.minus() : type = OperatorType.minus;
+  const Operator.multiply() : type = OperatorType.multiply;
+  const Operator.divide() : type = OperatorType.divide;
+
+  @override
+  String toString() {
+    return type.toSymbol();
+  }
+}
+
+enum OperatorType {
+  plus,
+  minus,
+  multiply,
+  divide;
+
+  String toSymbol() {
+    switch (this) {
+      case OperatorType.plus:
+        return '+';
+      case OperatorType.minus:
+        return '-';
+      case OperatorType.multiply:
+        return '×';
+      case OperatorType.divide:
+        return '÷';
+    }
+  }
+}
+
+/// Evaluate the current expression
+class Equals extends CalculatorAction {
+  const Equals();
+  @override
+  String toString() {
+    return '=';
+  }
+}
+
+/// Clear everything (AC)
+class ClearAll extends CalculatorAction {
+  const ClearAll();
+  @override
+  String toString() {
+    return 'AC';
+  }
+}
+
+/// Clear only the current entry (CE)
+class ClearEntry extends CalculatorAction {
+  const ClearEntry();
+  @override
+  String toString() {
+    return 'CE';
+  }
+}
+
+/// Delete last character of the current entry
+class Backspace extends CalculatorAction {
+  const Backspace();
+
+  @override
+  String toString() {
+    return 'CE';
+  }
+}
+
+/// Toggle sign of the current entry (±)
+class ToggleSign extends CalculatorAction {
+  const ToggleSign();
+
+  @override
+  String toString() {
+    return '±';
+  }
+}
+
+/// Convert current entry to a percentage (divide by 100)
+class Percent extends CalculatorAction {
+  const Percent();
+
+  @override
+  String toString() {
+    return '%';
+  }
+}
+
+// -----------------------------
+// Engine
+// -----------------------------
+
+class CalculatorEngine {
+  final List<CalculatorAction> _history = <CalculatorAction>[];
+
+  // Internal state derived by replaying history
+  String _currentEntry = ""; // textual buffer for the number being typed
+  final List<_Token> _tokens = <_Token>[]; // committed numbers & operators
+  bool _justEvaluated = false; // last action was Equals
+  String? _error; // non-null if an error occurred during evaluation
+
+  // --- Public API ---
+
+  /// Append an action to the history and update the state by replaying it.
+  void execute(CalculatorAction action) {
+    _apply(action, record: true);
+  }
+
+  /// All actions so far (immutable copy)
+  List<CalculatorAction> get history => List.unmodifiable(_history);
+
+  /// The text to show on the calculator main display.
+  /// If an error occurred, this returns a message like "Error" or "Division by zero".
+  String get display =>
+      _error ??
+      (_currentEntry.isEmpty
+          ? _formatNumber(_evaluateTokens())
+          : _currentEntry);
+
+  /// A human-friendly one-line history like: "12 + 7 × 3 = 33".
+  String get historyDisplay {
+    if (_history.isEmpty) return "";
+    final sb = StringBuffer();
+
+    // Reconstruct by walking tokens and entry
+    for (final t in _tokens) {
+      if (t is _NumberTok) {
+        sb.write(_trimTrailingZeros(t.value));
+      } else if (t is _OpTok) {
+        sb.write(" ${t.type.toSymbol()} ");
+      }
+    }
+    if (_currentEntry.isNotEmpty) {
+      if (sb.isNotEmpty) sb.write(" ");
+      sb.write(_currentEntry);
+    }
+
+    // If last action was Equals, append "= result"
+    if (_history.isNotEmpty && _history.last is Equals) {
+      final res = _error ?? _formatNumber(_evaluateTokens());
+      if (sb.isNotEmpty) sb.write(" ");
+      sb.write("= $res");
+    }
+
+    return sb.toString();
+  }
+
+  /// True if the engine is currently in an error state.
+  bool get hasError => _error != null;
+
+  /// Erases everything and clears history. Does not add a history entry.
+  void reset() {
+    _history.clear();
+    _currentEntry = "";
+    _tokens.clear();
+    _justEvaluated = false;
+    _error = null;
+  }
+
+  // --- Internals ---
+
+  void _apply(CalculatorAction action, {bool record = false}) {
+    if (record) _history.add(action);
+
+    if (action is ClearAll) {
+      _currentEntry = "";
+      _tokens.clear();
+      _justEvaluated = false;
+      _error = null;
+      return;
+    }
+
+    if (action is ClearEntry) {
+      _currentEntry = "";
+      _error = null;
+      return;
+    }
+
+    if (action is Backspace) {
+      if (_currentEntry.isNotEmpty) {
+        _currentEntry = _currentEntry.substring(0, _currentEntry.length - 1);
+      }
+      return;
+    }
+
+    if (action is Digit) {
+      if (_justEvaluated) {
+        // Start a new entry after equals if user types a digit
+        _tokens.clear();
+        _currentEntry = "";
+        _justEvaluated = false;
+      }
+      // Prevent leading zeros like 00012 unless after decimal
+      if (_currentEntry == "0") _currentEntry = "";
+      _currentEntry += action.value.toString();
+      return;
+    }
+
+    if (action is DecimalPoint) {
+      if (_justEvaluated) {
+        _tokens.clear();
+        _currentEntry = "";
+        _justEvaluated = false;
+      }
+      if (_currentEntry.isEmpty) {
+        _currentEntry = "0.";
+      } else if (!_currentEntry.contains('.')) {
+        _currentEntry += ".";
+      }
+      return;
+    }
+
+    if (action is ToggleSign) {
+      if (_currentEntry.isEmpty) {
+        // Toggle last number token if no active entry
+        for (int i = _tokens.length - 1; i >= 0; i--) {
+          final t = _tokens[i];
+          if (t is _NumberTok) {
+            _tokens[i] = _NumberTok(-t.value);
+            break;
+          }
+        }
+      } else {
+        if (_currentEntry.startsWith("-")) {
+          _currentEntry = _currentEntry.substring(1);
+        } else {
+          _currentEntry = "-$_currentEntry";
+        }
+      }
+      return;
+    }
+
+    if (action is Percent) {
+      if (_currentEntry.isEmpty) return;
+      final v = double.tryParse(_currentEntry);
+      if (v != null) {
+        _currentEntry = _trimTrailingZeros(v / 100.0);
+      }
+      return;
+    }
+
+    if (action is Operator) {
+      _commitEntryIfAny();
+      _error = null;
+      // Replace operator if previous token is an operator
+      if (_tokens.isNotEmpty && _tokens.last is _OpTok) {
+        _tokens[_tokens.length - 1] = _OpTok(action.type);
+      } else {
+        _tokens.add(_OpTok(action.type));
+      }
+      _justEvaluated = false;
+      return;
+    }
+
+    if (action is Equals) {
+      _commitEntryIfAny();
+      final res = _safeEvaluate();
+      if (res == null) {
+        // keep tokens as-is; _error populated
+        _justEvaluated = true; // still consider as evaluated for UI flow
+        return;
+      }
+      _tokens
+        ..clear()
+        ..add(_NumberTok(res));
+      _currentEntry = "";
+      _error = null;
+      _justEvaluated = true;
+      return;
+    }
+  }
+
+  void _commitEntryIfAny() {
+    if (_currentEntry.isEmpty) return;
+    final parsed = double.tryParse(_currentEntry);
+    if (parsed != null) {
+      _tokens.add(_NumberTok(parsed));
+    }
+    _currentEntry = "";
+  }
+
+  String _formatNumber(double value) => _trimTrailingZeros(value);
+
+  String _trimTrailingZeros(double value) {
+    final s = value.toStringAsFixed(12); // avoid floating noise
+    // Trim trailing zeros and possibly the decimal point
+    String out = s;
+    while (out.contains('.') && (out.endsWith('0') || out.endsWith('.'))) {
+      out = out.substring(0, out.length - 1);
+      if (out.endsWith('.')) {
+        out = out.substring(0, out.length - 1);
+        break;
+      }
+    }
+    if (out.isEmpty) return "0";
+    return out;
+  }
+
+  /// Evaluate tokens with operator precedence using a simple shunting-yard.
+  double _evaluateTokens() {
+    final rpn = <_Token>[];
+    final ops = <_OpTok>[];
+
+    int prec(OperatorType t) {
+      switch (t) {
+        case OperatorType.plus:
+        case OperatorType.minus:
+          return 1;
+        case OperatorType.multiply:
+        case OperatorType.divide:
+          return 2;
+      }
+    }
+
+    for (final t in _tokens) {
+      if (t is _NumberTok) {
+        rpn.add(t);
+      } else if (t is _OpTok) {
+        while (ops.isNotEmpty && prec(ops.last.type) >= prec(t.type)) {
+          rpn.add(ops.removeLast());
+        }
+        ops.add(t);
+      }
+    }
+    rpn.addAll(ops.reversed);
+
+    final stack = <double>[];
+    for (final t in rpn) {
+      if (t is _NumberTok) {
+        stack.add(t.value);
+      } else if (t is _OpTok) {
+        if (stack.length < 2) return double.nan;
+        final b = stack.removeLast();
+        final a = stack.removeLast();
+        switch (t.type) {
+          case OperatorType.plus:
+            stack.add(a + b);
+            break;
+          case OperatorType.minus:
+            stack.add(a - b);
+            break;
+          case OperatorType.multiply:
+            stack.add(a * b);
+            break;
+          case OperatorType.divide when b == 0.0:
+            return double.infinity; // will be handled by _safeEvaluate
+          case OperatorType.divide:
+            stack.add(a / b);
+            break;
+        }
+      }
+    }
+    return stack.isEmpty ? 0.0 : stack.single;
+  }
+
+  double? _safeEvaluate() {
+    final res = _evaluateTokens();
+    if (res.isNaN) {
+      _error = "Error";
+      return null;
+    }
+    if (res.isInfinite) {
+      _error = "Division by zero";
+      return null;
+    }
+    return res;
+  }
+}
+
+// -----------------------------
+// Token model
+// -----------------------------
+
+abstract class _Token {
+  const _Token();
+}
+
+class _NumberTok extends _Token {
+  final double value;
+  const _NumberTok(this.value);
+}
+
+class _OpTok extends _Token {
+  final OperatorType type;
+  const _OpTok(this.type);
 }
 

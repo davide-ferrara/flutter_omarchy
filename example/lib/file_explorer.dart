@@ -298,7 +298,6 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
     final theme = OmarchyTheme.of(context);
 
     return OmarchyScaffold(
-      minLeadingMenuWidth: 140,
       navigationBar: OmarchyNavigationBar(
         title: Text(_currentFolder.name),
 
@@ -360,7 +359,7 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
           ),
         ],
       ),
-      leadingMenu: _showLeadingMenu
+      leadingPanel: _showLeadingMenu
           ? ListView(
               children: [
                 for (final favorite in FileSystem.favorites)

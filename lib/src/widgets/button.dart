@@ -1,4 +1,6 @@
-import 'package:flutter_omarchy/flutter_omarchy.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_omarchy/src/theme/colors.dart';
+import 'package:flutter_omarchy/src/theme/theme.dart';
 import 'package:flutter_omarchy/src/widgets/utils/default_foreground.dart';
 import 'package:flutter_omarchy/src/widgets/utils/pointer_area.dart';
 
@@ -24,10 +26,10 @@ class OmarchyButtonStyleData {
 
   OmarchyButtonStyleStateData fromPointer(PointerState state) =>
       switch (state) {
+        PointerState(isEnabled: false) => disabled,
         PointerState(isPressed: true) => pressed,
         PointerState(isHovering: true) => hovering,
         PointerState(hasFocus: true) => focused,
-        PointerState(isEnabled: false) => disabled,
         _ => normal,
       };
 
@@ -179,9 +181,9 @@ class FilledOmarchyButtonStyle extends OmarchyButtonStyle {
           foreground: bright,
         ),
         disabled: (
-          border: normal,
-          background: normal.withValues(alpha: 0.05),
-          foreground: normal,
+          border: normal.withValues(alpha: 0),
+          background: normal.withValues(alpha: 0.02),
+          foreground: normal.withValues(alpha: 0.3),
         ),
       ),
     };
@@ -326,12 +328,16 @@ class OmarchyButton extends StatelessWidget {
     this.onPressed,
     this.padding = const EdgeInsets.all(16),
     this.style,
+    this.focusNode,
+    this.borderWidth,
   });
 
   final Widget child;
   final OmarchyButtonStyle? style;
   final EdgeInsets padding;
   final VoidCallback? onPressed;
+  final FocusNode? focusNode;
+  final double? borderWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -341,6 +347,7 @@ class OmarchyButton extends StatelessWidget {
                 OmarchyButtonStyle.outline(AnsiColor.white))
             .resolve(context);
     return PointerArea(
+      focusNode: focusNode,
       onTap: onPressed,
       child: child,
       builder: (context, state, child) {
@@ -350,7 +357,7 @@ class OmarchyButton extends StatelessWidget {
           decoration: BoxDecoration(
             color: stateStyle.background,
             border: BoxBorder.all(
-              width: style.borderWidth,
+              width: borderWidth ?? style.borderWidth,
               color: stateStyle.border,
             ),
           ),

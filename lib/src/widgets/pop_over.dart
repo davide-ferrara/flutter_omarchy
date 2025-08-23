@@ -85,11 +85,13 @@ class OmarchyPopOverContainer extends StatelessWidget {
     required this.child,
     required this.maxWidth,
     this.maxHeight = 300,
+    this.alignment,
   });
 
   final double maxWidth;
   final double maxHeight;
   final Widget child;
+  final Alignment? alignment;
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +100,7 @@ class OmarchyPopOverContainer extends StatelessWidget {
       width: maxWidth,
       height: maxHeight,
       child: Align(
-        alignment: Alignment.topLeft,
+        alignment: alignment ?? Alignment.topLeft,
         child: Container(
           decoration: BoxDecoration(
             color: theme.colors.background,

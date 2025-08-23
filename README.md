@@ -115,6 +115,16 @@ Omarchy provides a rich set of widgets:
 
 To bundle and run your Flutter Omarchy application on Linux, follow these steps:
 
+### Remove the Title Bar
+
+Flutter Linux apps are GTK windows. To remove the default title bar, edit `linux/runner/my_application.cc`.
+
+Remove the code related to the title bar:
+
+> TODO
+
+Rebuild the app, and you’ll have a clean, borderless window.
+
 ### Building the Linux Bundle
 
 1. Make sure you have the required Linux dependencies installed:
@@ -172,6 +182,12 @@ flutter run --app=pomodoro
 
 [View in browser](https://aloisdeniel.github.io/flutter_omarchy/?app=gallery) | [Code](example/lib/gallery.dart)
 
+### QR Code Generator
+
+![Screenshot](doc/example-qrcode.png)
+
+[View in browser](https://aloisdeniel.github.io/flutter_omarchy/?app=qr_code_generator) | [Code](example/lib/counter.dart)
+
 ### File Explorer
 
 ![Screenshot](doc/example-file-explorer.png)
@@ -205,7 +221,6 @@ flutter run --app=pomodoro
   * AI Chat
   * World clocks
   * Podcast player
-  * QRCode generator
   * Password manager
   * Contact book
   * Drawing pad (drawing + text)
