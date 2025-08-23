@@ -224,6 +224,7 @@ flutter run --app=pomodoro
 * Preconfigured HJKL shortcuts for navigation
 * Specific ormarchy theme configuration (colors, hide nav bar, ...)
 * Widgets 
+  * M
   * Toasts
   * Progress
   * Skeleton

@@ -468,24 +468,26 @@ class WidgetsPage extends StatelessWidget {
                   ],
                 ),
                 Section(
+                  title: 'Select',
+                  children: [
+                    OmarchySelect<String>(
+                      value: Some('Option 2'),
+                      options: [for (var i = 0; i < 20; i++) 'Option $i'],
+                      onChanged: (v) {},
+                      builder: (context, v) => Text(v),
+                    ),
+                  ],
+                ),
+                Section(
                   title: 'PopOver',
                   children: [
                     OmarchyPopOver(
                       popOverBuilder: (context, size, hide) {
                         return OmarchyPopOverContainer(
-                          maxWidth: size?.width ?? 200,
-                          maxHeight: 300,
-                          child: ListView(
-                            children: [
-                              for (var i = 0; i < 20; i++)
-                                Selected(
-                                  isSelected: i == 2,
-                                  child: OmarchyTile(
-                                    title: Text('Option $i'),
-                                    onTap: hide,
-                                  ),
-                                ),
-                            ],
+                          child: SizedBox(
+                            width: size?.width ?? 200.0,
+                            height: 200,
+                            child: Center(child: Text('Hello')),
                           ),
                         );
                       },

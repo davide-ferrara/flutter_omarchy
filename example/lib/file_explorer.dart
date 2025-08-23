@@ -315,15 +315,13 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
         ],
         trailing: [
           OmarchyPopOver(
-            childAnchor: Alignment.topRight,
-            popOverAnchor: Alignment.topRight,
+            popOverDirection: OmarchyPopOverDirection.down,
             builder: (context, show) => OmarchyButton(
               onPressed: show,
               child: const Icon(OmarchyIcons.codAdd),
             ),
             offset: Offset(-7, 0),
             popOverBuilder: (context, size, hide) => OmarchyPopOverContainer(
-              maxWidth: 200,
               child: ListView(
                 shrinkWrap: true,
                 children: [

@@ -6,6 +6,17 @@ typedef OmarchyPopOverChildWidgetBuilder =
 typedef OmarchyPopOverWidgetBuilder =
     Widget Function(BuildContext context, Size? size, VoidCallback hide);
 
+enum OmarchyPopOverDirection {
+  up,
+  upLeft,
+  upRight,
+  right,
+  down,
+  downLeft,
+  downRight,
+  left,
+}
+
 class OmarchyPopOver extends StatefulWidget {
   const OmarchyPopOver({
     super.key,
@@ -13,16 +24,14 @@ class OmarchyPopOver extends StatefulWidget {
     required this.popOverBuilder,
     this.showWhenUnlinked = false,
     this.offset = Offset.zero,
-    this.popOverAnchor = Alignment.topLeft,
-    this.childAnchor = Alignment.topLeft,
+    this.popOverDirection = OmarchyPopOverDirection.downRight,
   });
 
   final OmarchyPopOverChildWidgetBuilder builder;
   final OmarchyPopOverWidgetBuilder popOverBuilder;
   final bool showWhenUnlinked;
   final Offset offset;
-  final Alignment popOverAnchor;
-  final Alignment childAnchor;
+  final OmarchyPopOverDirection popOverDirection;
 
   @override
   State<OmarchyPopOver> createState() => _OmarchyPopOverState();
@@ -39,6 +48,40 @@ class _OmarchyPopOverState extends State<OmarchyPopOver> {
 
   @override
   Widget build(BuildContext context) {
+    final anchor = switch (widget.popOverDirection) {
+      OmarchyPopOverDirection.upLeft => (
+        childAnchor: Alignment.topRight,
+        popOverAnchor: Alignment.bottomRight,
+      ),
+      OmarchyPopOverDirection.upRight => (
+        childAnchor: Alignment.topLeft,
+        popOverAnchor: Alignment.bottomLeft,
+      ),
+      OmarchyPopOverDirection.downLeft => (
+        childAnchor: Alignment.bottomRight,
+        popOverAnchor: Alignment.topRight,
+      ),
+      OmarchyPopOverDirection.downRight => (
+        childAnchor: Alignment.bottomLeft,
+        popOverAnchor: Alignment.topLeft,
+      ),
+      OmarchyPopOverDirection.up => (
+        childAnchor: Alignment.topCenter,
+        popOverAnchor: Alignment.bottomCenter,
+      ),
+      OmarchyPopOverDirection.down => (
+        childAnchor: Alignment.bottomCenter,
+        popOverAnchor: Alignment.topCenter,
+      ),
+      OmarchyPopOverDirection.left => (
+        childAnchor: Alignment.centerLeft,
+        popOverAnchor: Alignment.centerRight,
+      ),
+      OmarchyPopOverDirection.right => (
+        childAnchor: Alignment.centerRight,
+        popOverAnchor: Alignment.centerLeft,
+      ),
+    };
     return CompositedTransformTarget(
       link: _link,
       child: OverlayPortal(
@@ -58,8 +101,8 @@ class _OmarchyPopOverState extends State<OmarchyPopOver> {
                 link: _link,
                 showWhenUnlinked: widget.showWhenUnlinked,
                 offset: widget.offset,
-                targetAnchor: widget.childAnchor,
-                followerAnchor: widget.popOverAnchor,
+                targetAnchor: anchor.childAnchor,
+                followerAnchor: anchor.popOverAnchor,
                 child: IntrinsicHeight(
                   child: IntrinsicWidth(
                     child: widget.popOverBuilder(
@@ -83,33 +126,21 @@ class OmarchyPopOverContainer extends StatelessWidget {
   const OmarchyPopOverContainer({
     super.key,
     required this.child,
-    required this.maxWidth,
-    this.maxHeight = 300,
     this.alignment,
   });
 
-  final double maxWidth;
-  final double maxHeight;
   final Widget child;
   final Alignment? alignment;
 
   @override
   Widget build(BuildContext context) {
     final theme = OmarchyTheme.of(context);
-    return SizedBox(
-      width: maxWidth,
-      height: maxHeight,
-      child: Align(
-        alignment: alignment ?? Alignment.topLeft,
-        child: Container(
-          decoration: BoxDecoration(
-            color: theme.colors.background,
-            border: Border.all(color: theme.colors.border, width: 2),
-          ),
-          constraints: BoxConstraints(maxWidth: maxWidth, maxHeight: maxHeight),
-          child: child,
-        ),
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colors.background,
+        border: Border.all(color: theme.colors.border, width: 2),
       ),
+      child: child,
     );
   }
 }

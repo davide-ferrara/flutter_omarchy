@@ -1,6 +1,7 @@
 export 'utils/selected.dart';
 export 'utils/grouping.dart';
 export 'utils/pointer_area.dart';
+export 'utils/optional.dart';
 
 export 'button.dart';
 export 'resize_divider.dart';
@@ -19,4 +20,5 @@ export 'icon_data.g.dart';
 export 'tooltip.dart';
 export 'input_container.dart';
 export 'text_input.dart';
+export 'select.dart';
 export 'split_panel.dart';

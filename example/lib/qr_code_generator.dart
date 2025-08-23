@@ -106,7 +106,7 @@ class _HomePageState extends State<HomePage> {
     final theme = OmarchyTheme.of(context);
     return OmarchyScaffold(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Expanded(
             child: Padding(
@@ -127,9 +127,11 @@ class _HomePageState extends State<HomePage> {
                         )),
                         child: switch (_error) {
                           null when _squares.isNotEmpty => FittedBox(
+                            fit: BoxFit.contain,
                             child: CustomPaint(
                               size: Size(512, 512),
                               painter: _QrCodePainter(
+                                padding: 24,
                                 background: theme.colors.background,
                                 foreground: switch (_color) {
                                   null => theme.colors.foreground,
@@ -226,137 +228,69 @@ class _ToolBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OmarchyTheme.of(context);
-    final textInput = OmarchyInputContainer(
-      builder: (context, focusNode) => OmarchyTextInput(
-        focusNode: focusNode,
-        controller: input,
-        placeholder: Text('Enter text to generate QR code'),
-      ),
-    );
-    final options = <Widget>[
-      OmarchyPopOver(
-        key: Key('color_input'),
-        popOverAnchor: Alignment.bottomRight,
-        childAnchor: Alignment.bottomRight,
-        popOverBuilder: (context, size, hide) {
-          return OmarchyPopOverContainer(
-            alignment: Alignment.bottomRight,
-            maxWidth: 100,
-            maxHeight: 540,
-            child: ListView(
-              shrinkWrap: true,
-              children: [
-                for (final v in [null, ...AnsiColor.values])
-                  Selected(
-                    isSelected: color == v,
-                    child: OmarchyTile(
-                      title: ColorBox(color: v, theme: theme),
-                      onTap: () {
-                        onColorChanged(v);
-                        hide();
-                      },
-                    ),
-                  ),
-              ],
-            ),
-          );
-        },
-        builder: (context, show) => OmarchyInputContainer(
-          builder: (context, focusNode) => OmarchyButton(
-            focusNode: focusNode,
-            borderWidth: 0.0,
-            onPressed: show,
-            child: SizedBox(
-              width: 52,
-              child: ColorBox(color: color, theme: theme),
-            ),
-          ),
-        ),
-      ),
-      OmarchyPopOver(
-        key: Key('type_number_input'),
-        popOverAnchor: Alignment.bottomRight,
-        childAnchor: Alignment.bottomRight,
-        popOverBuilder: (context, size, hide) {
-          return OmarchyPopOverContainer(
-            alignment: Alignment.bottomRight,
-            maxWidth: 60,
-            maxHeight: 540,
-            child: ListView(
-              shrinkWrap: true,
-              children: [
-                for (var v = 1; v <= 40; v++)
-                  Selected(
-                    isSelected: typeNumber == v,
-                    child: OmarchyTile(
-                      title: Text(v.toString()),
-                      onTap: () {
-                        onTypeNumberChanged(v);
-                        hide();
-                      },
-                    ),
-                  ),
-              ],
-            ),
-          );
-        },
-        builder: (context, show) => OmarchyInputContainer(
-          builder: (context, focusNode) => OmarchyButton(
-            focusNode: focusNode,
-            borderWidth: 0.0,
-            onPressed: show,
-            child: Text(typeNumber.toString()),
-          ),
-        ),
-      ),
-      OmarchyPopOver(
-        key: Key('error_correct_level_input'),
-        popOverAnchor: Alignment.bottomRight,
-        childAnchor: Alignment.bottomRight,
-        popOverBuilder: (context, size, hide) {
-          return OmarchyPopOverContainer(
-            alignment: Alignment.bottomRight,
-            maxWidth: 140,
-            maxHeight: 500,
-            child: ListView(
-              shrinkWrap: true,
-              children: [
-                for (final v in QrErrorCorrectLevel.levels)
-                  Selected(
-                    isSelected: errorCorrectLevel == v,
-                    child: OmarchyTile(
-                      title: Text(QrErrorCorrectLevel.getName(v)),
-                      onTap: () {
-                        onErrorCorrectLevelChanged(v);
-                        hide();
-                      },
-                    ),
-                  ),
-              ],
-            ),
-          );
-        },
-        builder: (context, show) => OmarchyInputContainer(
-          builder: (context, focusNode) => OmarchyButton(
-            focusNode: focusNode,
-            borderWidth: 0.0,
-            onPressed: show,
-            child: Text(QrErrorCorrectLevel.getName(errorCorrectLevel)),
-          ),
-        ),
-      ),
-    ];
-    final copyButton = OmarchyButton(
-      style: OmarchyButtonStyle.filled(AnsiColor.green),
-      onPressed: onCopy,
-      child: Row(
-        spacing: 4,
-        children: [Text('Copy'), Icon(OmarchyIcons.codCopy)],
-      ),
-    );
     return LayoutBuilder(
       builder: (context, layout) {
-        if (layout.maxWidth < 500) {
+        final isSmall = layout.maxWidth < 500;
+        final textInput = OmarchyInputContainer(
+          builder: (context, focusNode) => OmarchyTextInput(
+            focusNode: focusNode,
+            controller: input,
+            placeholder: Text('Enter text to generate QR code'),
+          ),
+        );
+        final popOverDirection = isSmall
+            ? OmarchyPopOverDirection.upRight
+            : OmarchyPopOverDirection.up;
+        final options = <Widget>[
+          OmarchyInputContainer(
+            key: Key('color_input'),
+            builder: (context, focusNode) => SizedBox(
+              child: OmarchySelect<AnsiColor?>(
+                direction: popOverDirection,
+                options: [null, ...AnsiColor.values],
+                value: Some(color),
+                onChanged: onColorChanged,
+                builder: (context, v) => SizedBox(
+                  width: 40,
+                  child: ColorBox(color: v, theme: theme),
+                ),
+              ),
+            ),
+          ),
+          OmarchyInputContainer(
+            key: Key('type_number_input'),
+            builder: (context, focusNode) => OmarchySelect<int>(
+              direction: popOverDirection,
+              options: List.generate(19, (x) => x + 1),
+              value: Some(typeNumber),
+              onChanged: onTypeNumberChanged,
+              builder: (context, v) => Align(
+                alignment: Alignment.centerRight,
+                child: Text(v.toString()),
+              ),
+            ),
+          ),
+          OmarchyInputContainer(
+            key: Key('error_correct_level_input'),
+            builder: (context, focusNode) => OmarchySelect<int>(
+              direction: popOverDirection,
+              options: QrErrorCorrectLevel.levels,
+              value: Some(errorCorrectLevel),
+              onChanged: onErrorCorrectLevelChanged,
+              builder: (context, value) =>
+                  Text(QrErrorCorrectLevel.getName(value)),
+            ),
+          ),
+        ];
+        final copyButton = OmarchyButton(
+          style: OmarchyButtonStyle.filled(AnsiColor.green),
+          onPressed: onCopy,
+          child: Row(
+            spacing: 4,
+            children: [Text('Copy'), Icon(OmarchyIcons.codCopy)],
+          ),
+        );
+        if (isSmall) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             spacing: 8,
@@ -402,16 +336,19 @@ class _QrCodePainter extends CustomPainter {
     required this.background,
     required this.foreground,
     required this.squares,
+    required this.padding,
   });
   final Color background;
   final Color foreground;
+  final double padding;
   final List<bool> squares;
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..style = PaintingStyle.fill
       ..isAntiAlias = false;
-    final squareSize = size.width / (sqrt(squares.length)).ceil();
+    final effectiveWidth = size.width - padding * 2;
+    final squareSize = effectiveWidth / (sqrt(squares.length)).ceil();
     paint.color = background;
     canvas.drawRect(Offset.zero & size, paint);
     paint.color = foreground;
@@ -419,7 +356,10 @@ class _QrCodePainter extends CustomPainter {
       if (squares[i]) {
         final x = (i % sqrt(squares.length).ceil()) * squareSize;
         final y = (i ~/ sqrt(squares.length).ceil()) * squareSize;
-        canvas.drawRect(Rect.fromLTWH(x, y, squareSize, squareSize), paint);
+        canvas.drawRect(
+          Rect.fromLTWH(padding + x, padding + y, squareSize, squareSize),
+          paint,
+        );
       }
     }
   }
