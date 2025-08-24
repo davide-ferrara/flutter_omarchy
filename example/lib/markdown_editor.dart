@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter_omarchy/flutter_omarchy.dart';
 
 import 'package:markdown_widget/widget/all.dart';
@@ -92,11 +91,20 @@ class MarkdownEditingController extends TextEditingController {
       return spans;
     }
 
-    final parser = MarkdownParser();
+    final md = consecutiveAggregatedSpans(text);
 
-    final md = parser.parse(text);
-
+    var previousEnd = 0;
     for (final span in md) {
+      if (span.start > previousEnd) {
+        // Add normal text for the gap
+        spans.add(
+          TextSpan(
+            text: text.substring(previousEnd, span.start),
+            style: style ?? const TextStyle(),
+          ),
+        );
+      }
+      previousEnd = span.end;
       TextStyle spanStyle = style ?? const TextStyle();
       for (final attr in span.attributes) {
         switch (attr) {
@@ -190,8 +198,23 @@ class MarkdownEditingController extends TextEditingController {
                   ),
             );
         }
-        spans.add(TextSpan(text: span.text, style: spanStyle));
+        spans.add(
+          TextSpan(
+            text: text.substring(span.start, span.end),
+            style: spanStyle,
+          ),
+        );
       }
+    }
+
+    if (text.length > previousEnd) {
+      // Add normal text for the gap
+      spans.add(
+        TextSpan(
+          text: text.substring(previousEnd, text.length),
+          style: style ?? const TextStyle(),
+        ),
+      );
     }
 
     return spans;
@@ -214,26 +237,13 @@ class MarkdownPreview extends StatelessWidget {
   }
 }
 
-// A simple GitHub‑flavored Markdown (GFM) tokenizer + parser implemented
-// fully without regex for the core algorithm. It produces a flat sequence
-// of Spans while preserving overlaps by computing active attribute ranges
-// and coalescing adjacent runs with equal attribute sets.
-//
-// Scope covered:
-// - Headings (# to ######)
-// - Blockquotes (> )
-// - Unordered list items (-, +, *)
-// - Task list items (- [ ] / - [x])
-// - Fenced code blocks (``` ... ```); no inline parsing inside
-// - Inline: **bold**, *italic*, __bold__, _italic_, ~~strikethrough~~,
-//   inline code `code`, links [text](url), images ![alt](src)
-//
+// Minimal Markdown parser that returns ranges (start, end) for common elements.
 // Notes:
-// - This is a pragmatic parser; it aims to be predictable and easy to extend
-//   rather than 100% spec‑complete.
-// - Links/images: only the visible text/alt contributes to output spans; URLs
-//   are ignored as requested. If you want URLs later, add a metadata map.
+// - Indexes are 0-based, end-exclusive.
+// - Inline matches are skipped if they fall inside fenced code blocks.
+// - Italic tries to avoid double-counting the inner part of bold (**...** / __...__).
 
+// ==== Your data types from the prompt ====
 enum MarkdownAttribute {
   bold,
   italic,
@@ -254,406 +264,336 @@ enum MarkdownAttribute {
   taskDone,
 }
 
-class MarkdownSpan {
-  final String text;
+class MarkdownMergedSpan {
+  const MarkdownMergedSpan(this.start, this.end, this.attributes);
+  final int start;
+  final int end;
   final List<MarkdownAttribute> attributes;
-  MarkdownSpan(this.text, [List<MarkdownAttribute> attrs = const []])
-    : attributes = List.unmodifiable(List.of(attrs));
+}
+
+class MarkdownSpan {
+  const MarkdownSpan(this.start, this.end, this.attribute);
+  final int start;
+  final int end;
+  final MarkdownAttribute attribute;
+
   @override
   String toString() =>
-      'Span(text: "${text.replaceAll('\n', '\\n')}", attributes: $attributes)';
+      'MarkdownSpan(start: $start, end: $end, attr: $attribute)';
 }
 
-// ===== Tokenizer primitives =====
-class _CharStream {
-  final String s;
-  int i = 0;
-  _CharStream(this.s);
-  bool get eof => i >= s.length;
-  int get pos => i;
-  String peek([int k = 0]) => (i + k < s.length) ? s[i + k] : '\u0000';
-  String next() => (i < s.length) ? s[i++] : '\u0000';
-  bool startsWith(String pat) {
-    if (i + pat.length > s.length) return false;
-    return s.substring(i, i + pat.length) == pat;
-  }
-}
-
-// ===== Parser =====
+// ==== Parser ====
 class MarkdownParser {
-  List<MarkdownSpan> parse(String input) {
-    final lines = input.split('\n');
+  const MarkdownParser();
+
+  List<MarkdownSpan> parseMarkdown(String document) {
     final spans = <MarkdownSpan>[];
+    final added = <String>{}; // to dedupe (start:end:attr)
+    final codeBlockRanges = <_Range>[];
 
-    var inFence = false; // fenced code block state
-    int fenceStartLine = -1;
-
-    for (var lineIdx = 0; lineIdx < lines.length; lineIdx++) {
-      var line = lines[lineIdx];
-      final baseAttrs = <MarkdownAttribute>[];
-
-      // Check for fence markers ``` (no language inference needed for attrs)
-      if (_isFence(line)) {
-        inFence = !inFence;
-        if (inFence) {
-          fenceStartLine = lineIdx;
-        }
-        // Fence delimiter lines themselves are not emitted.
-        continue;
+    bool overlapsAny(int start, int end, List<_Range> ranges) {
+      for (final r in ranges) {
+        if (start < r.end && end > r.start) return true;
       }
-
-      if (inFence) {
-        // Entire line is codeblock; do not interpret inline markdown.
-        spans.addAll(_emitLine(line, const [MarkdownAttribute.codeblock]));
-        if (lineIdx < lines.length - 1) spans.add(MarkdownSpan('\n'));
-        continue;
-      }
-
-      // Blockquote prefix
-      final blockquoteDepth = _consumeBlockquotePrefix(line);
-      if (blockquoteDepth > 0) {
-        baseAttrs.add(MarkdownAttribute.blockquote);
-        line = line.substring(_blockquotePrefixLength(line));
-      }
-
-      // Heading prefix (# ...)
-      final headingLevel = _headingLevel(line);
-      if (headingLevel > 0) {
-        baseAttrs.add(_headingAttr(headingLevel));
-        line = line.replaceFirst(RegExp(r'^#{1,6}[ \t]+'), '');
-      }
-
-      // List / Task markers
-      final taskState = _taskMarker(line);
-      if (taskState != null) {
-        baseAttrs.add(MarkdownAttribute.listItem);
-        baseAttrs.add(
-          taskState ? MarkdownAttribute.taskDone : MarkdownAttribute.taskTodo,
-        );
-        line = line.replaceFirst(RegExp(r'^\s*[-*+]\s+\[[ xX]\]\s*'), '');
-      } else if (_isUnorderedList(line)) {
-        baseAttrs.add(MarkdownAttribute.listItem);
-        line = line.replaceFirst(RegExp(r'^\s*[-*+]\s+'), '');
-      }
-
-      // Inline parsing with a real scanner (no regex for core logic)
-      spans.addAll(_parseInline(line, baseAttrs));
-      if (lineIdx < lines.length - 1) spans.add(MarkdownSpan('\n'));
-    }
-
-    // Coalesce adjacent spans with identical attributes
-    return _coalesce(spans);
-  }
-
-  // ===== Block helpers =====
-  bool _isFence(String line) {
-    var i = 0;
-    while (i < line.length && (line[i] == ' ' || line[i] == '\t')) i++;
-    if (i + 3 <= line.length && line.substring(i).startsWith('```'))
-      return true;
-    return false;
-  }
-
-  int _consumeBlockquotePrefix(String line) {
-    var i = 0, depth = 0;
-    while (i < line.length) {
-      // optional leading whitespace
-      while (i < line.length && (line[i] == ' ' || line[i] == '\t')) i++;
-      if (i < line.length && line[i] == '>') {
-        depth++;
-        i++;
-        if (i < line.length && line[i] == ' ') i++;
-      } else {
-        break;
-      }
-    }
-    return depth;
-  }
-
-  int _blockquotePrefixLength(String line) {
-    var i = 0;
-    while (i < line.length) {
-      while (i < line.length && (line[i] == ' ' || line[i] == '\t')) i++;
-      if (i < line.length && line[i] == '>') {
-        i++;
-        if (i < line.length && line[i] == ' ') i++;
-      } else {
-        break;
-      }
-    }
-    return i;
-  }
-
-  int _headingLevel(String line) {
-    var i = 0;
-    while (i < line.length && (line[i] == ' ' || line[i] == '\t')) i++;
-    var j = i;
-    while (j < line.length && line[j] == '#') j++;
-    final level = j - i;
-    if (level >= 1 && level <= 6) {
-      // require following space
-      if (j < line.length && (line[j] == ' ' || line[j] == '\t')) return level;
-    }
-    return 0;
-  }
-
-  MarkdownAttribute _headingAttr(int level) {
-    switch (level) {
-      case 1:
-        return MarkdownAttribute.heading1;
-      case 2:
-        return MarkdownAttribute.heading2;
-      case 3:
-        return MarkdownAttribute.heading3;
-      case 4:
-        return MarkdownAttribute.heading4;
-      case 5:
-        return MarkdownAttribute.heading5;
-      default:
-        return MarkdownAttribute.heading6;
-    }
-  }
-
-  bool? _taskMarker(String line) {
-    // returns true for done, false for todo, null for not a task
-    final trimmed = line.trimLeft();
-    var i = 0;
-    // bullet
-    if (trimmed.isEmpty) return null;
-    if (trimmed[0] != '-' && trimmed[0] != '*' && trimmed[0] != '+')
-      return null;
-    i++;
-    if (i >= trimmed.length || trimmed[i] != ' ') return null;
-    i++;
-    if (i >= trimmed.length || trimmed[i] != '[') return null;
-    i++;
-    if (i >= trimmed.length) return null;
-    final c = trimmed[i];
-    final isBox = c == ' ' || c == 'x' || c == 'X';
-    if (!isBox) return null;
-    i++;
-    if (i >= trimmed.length || trimmed[i] != ']') return null;
-    return (c == 'x' || c == 'X');
-  }
-
-  bool _isUnorderedList(String line) {
-    final trimmed = line.trimLeft();
-    if (trimmed.isEmpty) return false;
-    if (trimmed[0] != '-' && trimmed[0] != '*' && trimmed[0] != '+')
       return false;
-    if (trimmed.length >= 2 && trimmed[1] == ' ') return true;
-    return false;
-  }
-
-  // ===== Inline parsing =====
-  List<MarkdownSpan> _parseInline(String line, List<MarkdownAttribute> base) {
-    final spans = <MarkdownSpan>[];
-    final buf = StringBuffer();
-    final active = <MarkdownAttribute>{...base};
-
-    // helpers
-    void emit() {
-      if (buf.isEmpty) return;
-      spans.add(MarkdownSpan(buf.toString(), _sorted(active)));
-      buf.clear();
     }
 
-    void toggle(MarkdownAttribute a) {
-      if (active.contains(a)) {
-        emit();
-        active.remove(a);
-      } else {
-        emit();
-        active.add(a);
-      }
+    void addSpan(int start, int end, MarkdownAttribute attr) {
+      if (start < 0 || end <= start || end > document.length) return;
+      final key = '$start:$end:${attr.index}';
+      if (added.contains(key)) return;
+      spans.add(MarkdownSpan(start, end, attr));
+      added.add(key);
     }
 
-    // Process with a character stream
-    final cs = _CharStream(line);
-
-    while (!cs.eof) {
-      // Inline code span
-      if (cs.peek() == '`') {
-        cs.next(); // consume opening backtick
-        emit();
-        active.add(MarkdownAttribute.code);
-        while (!cs.eof && cs.peek() != '`') {
-          buf.write(cs.next());
-        }
-        emit();
-        active.remove(MarkdownAttribute.code);
-        if (cs.peek() == '`') cs.next(); // consume closing backtick if present
-        continue;
-      }
-
-      // Strong (** or __)
-      if (cs.startsWith('**')) {
-        cs.next();
-        cs.next();
-        toggle(MarkdownAttribute.bold);
-        continue;
-      }
-      if (cs.startsWith('__')) {
-        cs.next();
-        cs.next();
-        toggle(MarkdownAttribute.bold);
-        continue;
-      }
-
-      // Emphasis (* or _)
-      if (cs.peek() == '*') {
-        cs.next();
-        toggle(MarkdownAttribute.italic);
-        continue;
-      }
-      if (cs.peek() == '_') {
-        cs.next();
-        toggle(MarkdownAttribute.italic);
-        continue;
-      }
-
-      // Strikethrough ~~
-      if (cs.startsWith('~~')) {
-        cs.next();
-        cs.next();
-        toggle(MarkdownAttribute.strikethrough);
-        continue;
-      }
-
-      // Link [text](url)
-      if (cs.peek() == '[') {
-        final saved = cs.pos;
-        final inner = _scanBracketed(cs);
-        if (inner != null && cs.peek() == '(') {
-          // consume '(' url ')' but ignore the URL text in output
-          _consumeParen(cs);
-          // Recursively parse inner with same base, then add link attr
-          final innerSpans = _parseInline(inner, base);
-          for (final sp in innerSpans) {
-            spans.add(
-              MarkdownSpan(sp.text, [...sp.attributes, MarkdownAttribute.link]),
-            );
-          }
-          continue;
-        } else {
-          // Not a valid link; revert and treat as text
-          cs.i = saved;
-        }
-      }
-
-      // Image ![alt](src) — emits alt text with image attr
-      if (cs.peek() == '!' && cs.peek(1) == '[') {
-        cs.next(); // '!'
-        final inner = _scanBracketed(
-          cs,
-        ); // expects starting '[' already at stream
-        if (inner != null && cs.peek() == '(') {
-          _consumeParen(cs); // consume (src)
-          // alt becomes text with image attribute
-          final innerSpans = _parseInline(inner, base);
-          for (final sp in innerSpans) {
-            spans.add(
-              MarkdownSpan(sp.text, [
-                ...sp.attributes,
-                MarkdownAttribute.image,
-              ]),
-            );
-          }
-          continue;
-        } else {
-          // Fallback to literal '!'
-          buf.write('!');
-          continue;
-        }
-      }
-
-      // Default: literal char
-      buf.write(cs.next());
+    // ---------- 1) Fenced code blocks ``` or ~~~ ----------
+    // We pair fence lines 0-1, 2-3, ...; if an odd one remains, it spans to EOF.
+    final fenceLine = RegExp(r'^(?:```|~~~)[^\n]*$', multiLine: true);
+    final fenceMatches = fenceLine.allMatches(document).toList();
+    for (int i = 0; i < fenceMatches.length; i += 2) {
+      final start = fenceMatches[i].start;
+      final end = (i + 1 < fenceMatches.length)
+          ? fenceMatches[i + 1].end
+          : document.length;
+      addSpan(start, end, MarkdownAttribute.codeblock);
+      codeBlockRanges.add(_Range(start, end));
     }
 
-    emit();
+    // Helper to skip anything inside a fenced code block.
+    bool inCodeBlock(int s, int e) => overlapsAny(s, e, codeBlockRanges);
+
+    // ---------- 2) Headings (# to ###### at line start) ----------
+    final heading = RegExp(r'^(#{1,6})[ \t]+.*$', multiLine: true);
+    for (final m in heading.allMatches(document)) {
+      final start = m.start;
+      final end = m.end;
+      if (inCodeBlock(start, end)) continue;
+      final level = m.group(1)!.length;
+      final attr = [
+        MarkdownAttribute.heading1,
+        MarkdownAttribute.heading2,
+        MarkdownAttribute.heading3,
+        MarkdownAttribute.heading4,
+        MarkdownAttribute.heading5,
+        MarkdownAttribute.heading6,
+      ][level - 1];
+      addSpan(start, end, attr);
+    }
+
+    // ---------- 3) Blockquotes (lines starting with '>') ----------
+    final blockquote = RegExp(r'^[ \t]*> ?.*$', multiLine: true);
+    for (final m in blockquote.allMatches(document)) {
+      final start = m.start;
+      final end = m.end;
+      if (inCodeBlock(start, end)) continue;
+      addSpan(start, end, MarkdownAttribute.blockquote);
+    }
+
+    // ---------- 4) Task items ----------
+    // - [ ] todo, - [x] done (also accept +/* as bullet symbols)
+    final task = RegExp(
+      r'^[ \t]*[-+*][ \t]+\[( |x|X)\][ \t]+.*$',
+      multiLine: true,
+    );
+    final taskRanges = <_Range>[];
+    for (final m in task.allMatches(document)) {
+      final start = m.start;
+      final end = m.end;
+      if (inCodeBlock(start, end)) continue;
+      final marker = m.group(1)!;
+      final attr = (marker == ' ')
+          ? MarkdownAttribute.taskTodo
+          : MarkdownAttribute.taskDone;
+      addSpan(start, end, attr);
+      addSpan(
+        start,
+        end,
+        MarkdownAttribute.listItem,
+      ); // tasks are list items too
+      taskRanges.add(_Range(start, end));
+    }
+
+    // ---------- 5) Generic list items (bulleted or numbered) ----------
+    // Skip ones already tagged as task lines.
+    final listItem = RegExp(
+      r'^[ \t]*(?:[-+*]|[0-9]+\.)(?:[ \t]+).*$',
+      multiLine: true,
+    );
+    for (final m in listItem.allMatches(document)) {
+      final start = m.start;
+      final end = m.end;
+      if (inCodeBlock(start, end)) continue;
+      if (overlapsAny(start, end, taskRanges)) continue; // already added above
+      addSpan(start, end, MarkdownAttribute.listItem);
+    }
+
+    // ---------- 6) Images ----------
+    final image = RegExp(r'!\[[^\]]*\]\([^)]+\)');
+    for (final m in image.allMatches(document)) {
+      final start = m.start;
+      final end = m.end;
+      if (inCodeBlock(start, end)) continue;
+      addSpan(start, end, MarkdownAttribute.image);
+    }
+
+    // ---------- 7) Links (avoid picking up images which start with '!') ----------
+    final link = RegExp(r'\[[^\]]+\]\([^)]+\)');
+    for (final m in link.allMatches(document)) {
+      final start = m.start;
+      if (start > 0 && document[start - 1] == '!') continue; // it's an image
+      final end = m.end;
+      if (inCodeBlock(start, end)) continue;
+      addSpan(start, end, MarkdownAttribute.link);
+    }
+
+    // ---------- Inline spans (skip inside fenced code blocks) ----------
+    final inlineCodeRanges = <_Range>[];
+
+    // 8) Inline code: `code`
+    final inlineCode = RegExp(r'`[^`\n]+`');
+    for (final m in inlineCode.allMatches(document)) {
+      final start = m.start;
+      final end = m.end;
+      if (inCodeBlock(start, end)) continue;
+      addSpan(start, end, MarkdownAttribute.code);
+      inlineCodeRanges.add(_Range(start, end));
+    }
+    bool inInlineCode(int s, int e) => overlapsAny(s, e, inlineCodeRanges);
+
+    // 9) Bold: **...** and __...__
+    final boldAsterisk = RegExp(r'\*\*[^\s*][^*\n]*?[^\s*]\*\*');
+    for (final m in boldAsterisk.allMatches(document)) {
+      final start = m.start;
+      final end = m.end;
+      if (inCodeBlock(start, end) || inInlineCode(start, end)) continue;
+      addSpan(start, end, MarkdownAttribute.bold);
+    }
+    final boldUnderscore = RegExp(r'__[^ \n_][^_\n]*?[^ \n_]__');
+    for (final m in boldUnderscore.allMatches(document)) {
+      final start = m.start;
+      final end = m.end;
+      if (inCodeBlock(start, end) || inInlineCode(start, end)) continue;
+      addSpan(start, end, MarkdownAttribute.bold);
+    }
+
+    // 10) Italic: *...* and _..._
+    // We try to avoid counting parts of bold (**...** / __...__) as italic by checking adjacent chars.
+    final italicAsterisk = RegExp(r'\*[^ \n*][^*\n]*?[^ \n*]\*');
+    for (final m in italicAsterisk.allMatches(document)) {
+      final start = m.start;
+      final end = m.end;
+      if (inCodeBlock(start, end) || inInlineCode(start, end)) continue;
+      // If adjacent to another '*', it's likely part of **...**; skip.
+      final before = (start - 1 >= 0) ? document[start - 1] : null;
+      final after = (end < document.length) ? document[end] : null;
+      if (before == '*' || after == '*') continue;
+      addSpan(start, end, MarkdownAttribute.italic);
+    }
+    final italicUnderscore = RegExp(r'_[^ \n_][^_\n]*?[^ \n_]_');
+    for (final m in italicUnderscore.allMatches(document)) {
+      final start = m.start;
+      final end = m.end;
+      if (inCodeBlock(start, end) || inInlineCode(start, end)) continue;
+      final before = (start - 1 >= 0) ? document[start - 1] : null;
+      final after = (end < document.length) ? document[end] : null;
+      if (before == '_' || after == '_') continue; // part of __...__
+      addSpan(start, end, MarkdownAttribute.italic);
+    }
+
+    // 11) Strikethrough: ~~...~~
+    final strike = RegExp(r'~~[^ \n~][^~\n]*?[^ \n~]~~');
+    for (final m in strike.allMatches(document)) {
+      final start = m.start;
+      final end = m.end;
+      if (inCodeBlock(start, end) || inInlineCode(start, end)) continue;
+      addSpan(start, end, MarkdownAttribute.strikethrough);
+    }
+
+    // ---------- Done ----------
+    spans.sort((a, b) {
+      final c = a.start.compareTo(b.start);
+      return c != 0 ? c : a.end.compareTo(b.end);
+    });
     return spans;
   }
+}
 
-  // Reads "[ ... ]" content and returns the inner string, or null if not well‑formed.
-  String? _scanBracketed(_CharStream cs) {
-    if (cs.peek() != '[') return null;
-    cs.next(); // consume '['
-    final start = cs.pos;
-    var depth = 1;
-    while (!cs.eof) {
-      final ch = cs.next();
-      if (ch == '[') depth++;
-      if (ch == ']') {
-        depth--;
-        if (depth == 0) {
-          final end = cs.pos - 1; // position just before ']'
-          return cs.s.substring(start, end);
-        }
-      }
-      if (ch == '\\' && !cs.eof) cs.next(); // skip escaped char
+// Optional: top-level helper matching your requested signature exactly.
+List<MarkdownSpan> parseMarkdown(String document) {
+  return const MarkdownParser().parseMarkdown(document);
+}
+
+// Internal simple range holder
+class _Range {
+  _Range(this.start, this.end);
+  final int start;
+  final int end;
+}
+
+/// A span that covers a consecutive slice of the document and may
+/// have multiple Markdown attributes active at once.
+class ConsecutiveMarkdownSpan {
+  const ConsecutiveMarkdownSpan(this.start, this.end, this.attributes);
+
+  final int start; // inclusive
+  final int end; // exclusive
+  final Set<MarkdownAttribute> attributes;
+
+  @override
+  String toString() =>
+      'ConsecutiveMarkdownSpan(start: $start, end: $end, attrs: $attributes)';
+}
+
+/// Build consecutive, non-overlapping spans that cover the entire document,
+/// aggregating all attributes active over each span.
+/// - Indexes are 0-based, end-exclusive.
+/// - If no markdown feature applies to a slice, its `attributes` is an empty set.
+List<ConsecutiveMarkdownSpan> consecutiveAggregatedSpans(String document) {
+  final baseSpans = parseMarkdown(document); // uses the parser from earlier
+  return _consecutiveAggregatedSpansFromSpans(document, baseSpans);
+}
+
+/// Same as above, but lets you pass precomputed spans if you have them.
+List<ConsecutiveMarkdownSpan> consecutiveAggregatedSpansFromParsed(
+  String document,
+  List<MarkdownSpan> spans,
+) {
+  return _consecutiveAggregatedSpansFromSpans(document, spans);
+}
+
+// ---- Implementation ----
+
+List<ConsecutiveMarkdownSpan> _consecutiveAggregatedSpansFromSpans(
+  String document,
+  List<MarkdownSpan> spans,
+) {
+  // 1) Collect all boundary points where attributes can change.
+  final points = <int>{0, document.length};
+  for (final s in spans) {
+    // Clamp to document just in case.
+    final start = (s.start < 0)
+        ? 0
+        : (s.start > document.length ? document.length : s.start);
+    final end = (s.end < 0)
+        ? 0
+        : (s.end > document.length ? document.length : s.end);
+    if (end > start) {
+      points.add(start);
+      points.add(end);
     }
-    return null; // malformed
   }
+  final cuts = points.toList()..sort();
 
-  // Consumes "( ... )" group; returns inside but we discard result here
-  String _consumeParen(_CharStream cs) {
-    if (cs.peek() != '(') return '';
-    cs.next(); // '('
-    final start = cs.pos;
-    var depth = 1;
-    while (!cs.eof) {
-      final ch = cs.next();
-      if (ch == '(') depth++;
-      if (ch == ')') {
-        depth--;
-        if (depth == 0) {
-          final end = cs.pos - 1;
-          return cs.s.substring(start, end);
-        }
+  // 2) Build minimal consecutive slices between every adjacent pair of cuts.
+  final raw = <ConsecutiveMarkdownSpan>[];
+  for (var i = 0; i < cuts.length - 1; i++) {
+    final start = cuts[i];
+    final end = cuts[i + 1];
+    if (end <= start) continue;
+
+    // Aggregate all attributes that fully cover this slice.
+    final attrs = <MarkdownAttribute>{};
+    for (final s in spans) {
+      if (s.start <= start && s.end >= end) {
+        attrs.add(s.attribute);
       }
-      if (ch == '\\' && !cs.eof) cs.next();
     }
-    return '';
+    raw.add(ConsecutiveMarkdownSpan(start, end, attrs));
   }
 
-  // Emit a whole line with a fixed attribute set
-  List<MarkdownSpan> _emitLine(String line, List<MarkdownAttribute> attrs) {
-    if (line.isEmpty) return [MarkdownSpan('', attrs)];
-    return [
-      MarkdownSpan(line, _sorted({...attrs})),
-    ];
-  }
-
-  List<MarkdownSpan> _coalesce(List<MarkdownSpan> src) {
-    if (src.isEmpty) return src;
-    final out = <MarkdownSpan>[];
-    final buf = StringBuffer();
-    var curAttrs = src.first.attributes;
-    for (final s in src) {
-      if (_eqAttrs(curAttrs, s.attributes)) {
-        buf.write(s.text);
+  // 3) Merge adjacent slices that ended up with identical attribute sets
+  //    (can happen when multiple spans start/end at the same offset).
+  final merged = <ConsecutiveMarkdownSpan>[];
+  for (final s in raw) {
+    if (merged.isEmpty) {
+      merged.add(s);
+    } else {
+      final last = merged.last;
+      if (_sameAttrSet(last.attributes, s.attributes) && last.end == s.start) {
+        merged[merged.length - 1] = ConsecutiveMarkdownSpan(
+          last.start,
+          s.end,
+          last.attributes,
+        );
       } else {
-        out.add(MarkdownSpan(buf.toString(), curAttrs));
-        buf.clear();
-        buf.write(s.text);
-        curAttrs = s.attributes;
+        merged.add(s);
       }
     }
-    out.add(MarkdownSpan(buf.toString(), curAttrs));
-    // Drop empty spans
-    return out.where((s) => s.text.isNotEmpty).toList();
   }
+  return merged;
+}
 
-  bool _eqAttrs(List<MarkdownAttribute> a, List<MarkdownAttribute> b) {
-    if (a.length != b.length) return false;
-    for (var i = 0; i < a.length; i++) if (a[i] != b[i]) return false;
-    return true;
-  }
+bool _sameAttrSet(Set<MarkdownAttribute> a, Set<MarkdownAttribute> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  // Fast path: compare as bitmasks.
+  return _mask(a) == _mask(b);
+}
 
-  List<MarkdownAttribute> _sorted(Iterable<MarkdownAttribute> it) {
-    final l = it.toList();
-    l.sort((x, y) => x.index.compareTo(y.index));
-    return l;
+int _mask(Set<MarkdownAttribute> s) {
+  var m = 0;
+  for (final a in s) {
+    m |= (1 << a.index);
   }
+  return m;
 }

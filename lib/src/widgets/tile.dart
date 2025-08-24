@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_omarchy/src/omarchy.dart';
+import 'package:flutter_omarchy/src/theme/theme.dart';
 import 'package:flutter_omarchy/src/widgets/utils/default_foreground.dart';
 import 'package:flutter_omarchy/src/widgets/utils/pointer_area.dart';
 import 'package:flutter_omarchy/src/widgets/utils/selected.dart';
@@ -18,7 +18,7 @@ class OmarchyTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final omarchy = Omarchy.of(context);
+    final theme = OmarchyTheme.of(context);
     var child = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -26,12 +26,12 @@ class OmarchyTile extends StatelessWidget {
     );
     final isSelected = Selected.of(context);
     return SizedBox(
-      height: omarchy.theme.text.normal.fontSize! * 4,
+      height: theme.text.normal.fontSize! * 4,
       child: PointerArea(
         onTap: onTap,
         child: child,
         builder: (context, state, child) {
-          final background = omarchy.theme.colors.normal.black;
+          final background = theme.colors.normal.black;
           return AnimatedContainer(
             duration: const Duration(milliseconds: 120),
             decoration: BoxDecoration(
@@ -46,16 +46,14 @@ class OmarchyTile extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: DefaultForeground(
               textStyle: switch (isSelected) {
-                true => omarchy.theme.text.italic,
-                false => omarchy.theme.text.normal,
+                true => theme.text.italic,
+                false => theme.text.normal,
               },
               foreground: switch (state) {
-                _ when isSelected => omarchy.theme.colors.selectedText,
-                PointerState(isPressed: true) =>
-                  omarchy.theme.colors.selectedText,
-                PointerState(isHovering: true) =>
-                  omarchy.theme.colors.selectedText,
-                _ => omarchy.theme.colors.foreground,
+                _ when isSelected => theme.colors.selectedText,
+                PointerState(isPressed: true) => theme.colors.selectedText,
+                PointerState(isHovering: true) => theme.colors.selectedText,
+                _ => theme.colors.foreground,
               },
               child: child!,
             ),

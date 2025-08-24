@@ -1,12 +1,36 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_omarchy/src/config/config.dart';
-import 'package:flutter_omarchy/src/omarchy.dart';
 import 'package:flutter_omarchy/src/theme/colors.dart';
 import 'package:flutter_omarchy/src/theme/text.dart';
 
 abstract class OmarchyTheme {
   static OmarchyThemeData of(BuildContext context) {
-    return Omarchy.of(context).theme;
+    return OmarchyThemeProvider.maybeOf(context)!;
+  }
+
+  static OmarchyThemeData? maybeOf(BuildContext context) {
+    return OmarchyThemeProvider.maybeOf(context);
+  }
+}
+
+class OmarchyThemeProvider extends InheritedWidget {
+  const OmarchyThemeProvider({
+    super.key,
+    required this.data,
+    required super.child,
+  });
+
+  final OmarchyThemeData data;
+
+  static OmarchyThemeData? maybeOf(BuildContext context) {
+    final inherited = context
+        .dependOnInheritedWidgetOfExactType<OmarchyThemeProvider>();
+    return inherited?.data;
+  }
+
+  @override
+  bool updateShouldNotify(covariant OmarchyThemeProvider oldWidget) {
+    return oldWidget.data != data;
   }
 }
 

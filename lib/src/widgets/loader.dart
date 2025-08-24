@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
-import 'package:flutter_omarchy/src/omarchy.dart';
 import 'package:flutter_omarchy/src/theme/colors.dart';
+import 'package:flutter_omarchy/src/theme/theme.dart';
 
 class OmarchyLoader extends StatefulWidget {
   const OmarchyLoader({
@@ -47,15 +47,14 @@ class _OmarchyLoaderState extends State<OmarchyLoader>
 
   @override
   Widget build(BuildContext context) {
-    final omarchy = Omarchy.of(context);
+    final theme = OmarchyTheme.of(context);
     final color =
         widget.color ??
         switch (widget.accent) {
-          AnsiColor accent => omarchy.theme.colors.bright[accent],
-          null => omarchy.theme.colors.foreground,
+          AnsiColor accent => theme.colors.bright[accent],
+          null => theme.colors.foreground,
         };
-    final size =
-        widget.size ?? (omarchy.theme.text.normal.fontSize ?? 12) * 1.2;
+    final size = widget.size ?? (theme.text.normal.fontSize ?? 12) * 1.2;
     return CustomPaint(
       size: Size(size, size),
       foregroundPainter: _Painter(color: color, anim: controller),

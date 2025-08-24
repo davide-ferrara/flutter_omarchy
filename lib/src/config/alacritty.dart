@@ -6,7 +6,8 @@ class AlacrittyConfig {
   const AlacrittyConfig(this.values);
   final Map<String, dynamic> values;
 
-  static AlacrittyConfig? read() {
+  static AlacrittyConfig? read([File? file]) {
+    file ??= AlacrittyConfig.defaultFile;
     if (!file.existsSync()) return null;
     final config = file.readAsStringSync();
     final toml = TomlDocument.parse(config);
@@ -26,7 +27,7 @@ class AlacrittyConfig {
     return AlacrittyConfig(result);
   }
 
-  static File get file {
+  static File get defaultFile {
     final home = Platform.environment['HOME'];
     return File('$home/.config/alacritty/alacritty.toml');
   }

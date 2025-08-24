@@ -21,8 +21,8 @@ class OmarchyConfigData {
   }
 
   static Stream<OmarchyConfigData> watch() async* {
-    if (AlacrittyConfig.file.existsSync()) {
-      await for (final _ in AlacrittyConfig.file.watch()) {
+    if (AlacrittyConfig.defaultFile.existsSync()) {
+      await for (final _ in AlacrittyConfig.defaultFile.watch()) {
         yield read();
       }
     }

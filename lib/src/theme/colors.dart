@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_omarchy/src/config/config.dart';
-import 'package:flutter_omarchy/src/theme/fallback.dart';
+import 'package:flutter_omarchy/src/theme/fallback.g.dart';
 
 class OmarchyColorThemeData {
   const OmarchyColorThemeData({

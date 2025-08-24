@@ -43,14 +43,14 @@ class OmarchyApp extends StatelessWidget {
       theme: theme,
       child: Builder(
         builder: (context) {
-          final omarchy = Omarchy.of(context);
+          final theme = OmarchyTheme.of(context);
           return WidgetsApp(
             debugShowCheckedModeBanner: debugShowCheckedModeBanner,
             localizationsDelegates: _localizationsDelegates,
-            color: omarchy.theme.colors.border,
+            color: theme.colors.border,
             pageRouteBuilder: defaultPageRouteBuilder,
-            textStyle: omarchy.theme.text.normal.copyWith(
-              color: omarchy.theme.colors.foreground,
+            textStyle: theme.text.normal.copyWith(
+              color: theme.colors.foreground,
             ),
             home: home,
           );

@@ -7,10 +7,6 @@ class GalleryApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return OmarchyApp(
-      theme: OmarchyThemeData(
-        colors: OmarchyColorThemes.tokyoNight,
-        text: const OmarchyTextStyleData.fallback(),
-      ),
       debugShowCheckedModeBanner: false,
       home: const HomePage(),
     );
@@ -133,11 +129,11 @@ class TextStyles extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final omarchy = Omarchy.of(context);
+    final theme = OmarchyTheme.of(context);
     final base = [
-      ('normal', omarchy.theme.text.normal),
-      ('bold', omarchy.theme.text.bold),
-      ('italic', omarchy.theme.text.italic),
+      ('normal', theme.text.normal),
+      ('bold', theme.text.bold),
+      ('italic', theme.text.italic),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,12 +147,12 @@ class TextStyles extends StatelessWidget {
                 TextSpan(text: ' '),
                 TextSpan(
                   text: style.fontFamily,
-                  style: TextStyle(color: omarchy.theme.colors.bright.black),
+                  style: TextStyle(color: theme.colors.bright.black),
                 ),
                 TextSpan(text: ' '),
                 TextSpan(
                   text: '${style.fontSize}pt',
-                  style: TextStyle(color: omarchy.theme.colors.bright.black),
+                  style: TextStyle(color: theme.colors.bright.black),
                 ),
               ],
             ),
@@ -172,7 +168,7 @@ class Colors extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Omarchy.of(context).theme.colors;
+    final colors = OmarchyTheme.of(context).colors;
     final base = [
       ('background', colors.background),
       ('foreground', colors.foreground),
@@ -251,7 +247,7 @@ class WidgetsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final omarchy = Omarchy.of(context);
+    final theme = OmarchyTheme.of(context);
     return CustomScrollView(
       slivers:
           [
@@ -405,9 +401,7 @@ class WidgetsPage extends StatelessWidget {
                   children: [
                     Container(
                       decoration: BoxDecoration(
-                        border: Border.all(
-                          color: omarchy.theme.colors.normal.black,
-                        ),
+                        border: Border.all(color: theme.colors.normal.black),
                       ),
                       child: OmarchyTile(title: Text('Example')),
                     ),
@@ -420,9 +414,7 @@ class WidgetsPage extends StatelessWidget {
                       width: 400,
                       height: 320,
                       decoration: BoxDecoration(
-                        border: Border.all(
-                          color: omarchy.theme.colors.normal.black,
-                        ),
+                        border: Border.all(color: theme.colors.normal.black),
                       ),
                       child: OmarchyScaffold(
                         leadingPanel: Center(child: Text('Leading Menu')),
@@ -441,9 +433,7 @@ class WidgetsPage extends StatelessWidget {
                       width: 400,
                       height: 320,
                       decoration: BoxDecoration(
-                        border: Border.all(
-                          color: omarchy.theme.colors.normal.black,
-                        ),
+                        border: Border.all(color: theme.colors.normal.black),
                       ),
                       child: OmarchySplitPanel(
                         panel: Center(child: Text('Points panel (200)')),
@@ -455,9 +445,7 @@ class WidgetsPage extends StatelessWidget {
                       width: 400,
                       height: 320,
                       decoration: BoxDecoration(
-                        border: Border.all(
-                          color: omarchy.theme.colors.normal.black,
-                        ),
+                        border: Border.all(color: theme.colors.normal.black),
                       ),
                       child: OmarchySplitPanel(
                         panelInitialSize: PanelSize.ratio(0.5),
@@ -534,8 +522,8 @@ class WidgetsPage extends StatelessWidget {
                             TextSpan(text: 'A message for '),
                             TextSpan(
                               text: 'you',
-                              style: omarchy.theme.text.italic.copyWith(
-                                color: omarchy.theme.colors.bright.red,
+                              style: theme.text.italic.copyWith(
+                                color: theme.colors.bright.red,
                               ),
                             ),
                           ],

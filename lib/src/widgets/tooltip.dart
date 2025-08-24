@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_omarchy/src/omarchy.dart';
+import 'package:flutter_omarchy/src/theme/theme.dart';
 
 class OmarchyTooltip extends StatelessWidget {
   const OmarchyTooltip({
@@ -15,13 +15,11 @@ class OmarchyTooltip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final omarchy = Omarchy.of(context);
+    final theme = OmarchyTheme.of(context);
     return Tooltip(
       message: message,
-      decoration: BoxDecoration(color: omarchy.theme.colors.normal.black),
-      textStyle: omarchy.theme.text.normal.copyWith(
-        color: omarchy.theme.colors.bright.white,
-      ),
+      decoration: BoxDecoration(color: theme.colors.normal.black),
+      textStyle: theme.text.normal.copyWith(color: theme.colors.bright.white),
       richMessage: richMessage,
       child: child,
     );

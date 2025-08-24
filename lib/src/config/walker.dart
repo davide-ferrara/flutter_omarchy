@@ -4,7 +4,8 @@ class WalkerConfig {
   const WalkerConfig(this.colors);
   final Map<String, String> colors;
 
-  static WalkerConfig? read() {
+  static WalkerConfig? read([File? file]) {
+    file ??= WalkerConfig.defaultFile;
     if (!file.existsSync()) return null;
     final config = file.readAsStringSync();
 
@@ -20,14 +21,14 @@ class WalkerConfig {
     return WalkerConfig(colors);
   }
 
-  static File get file {
+  static File get defaultFile {
     final home = Platform.environment['HOME'];
     return File('$home/.config/omarchy/current/theme/walker.css');
   }
 
   static Stream<WalkerConfig?> watch() async* {
-    if (!file.existsSync()) {
-      await for (final _ in file.watch()) {
+    if (!defaultFile.existsSync()) {
+      await for (final _ in defaultFile.watch()) {
         yield read()!;
       }
     }
