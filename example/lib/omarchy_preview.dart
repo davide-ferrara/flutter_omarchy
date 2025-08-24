@@ -33,6 +33,7 @@ class _OmarchyPreviewState extends State<OmarchyPreview> {
     final colors = OmarchyColorThemes.all[theme]!;
     const text = OmarchyTextStyleData.fallback();
     final wallpaper = AssetImage('assets/$theme.jpg');
+    final insets = MediaQuery.viewInsetsOf(context);
     return OmarchyThemeProvider(
       data: OmarchyThemeData(colors: colors, text: text),
       child: Directionality(
@@ -49,7 +50,9 @@ class _OmarchyPreviewState extends State<OmarchyPreview> {
                 decoration: BoxDecoration(
                   image: DecorationImage(image: wallpaper, fit: BoxFit.cover),
                 ),
-                padding: const EdgeInsets.all(14.0),
+                padding:
+                    const EdgeInsets.all(14.0) +
+                    EdgeInsets.only(bottom: insets.bottom),
                 child: OmarchyWindow(
                   child: IndexedStack(
                     index: app.index,

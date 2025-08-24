@@ -33,10 +33,6 @@ class _MarkdownEditorPageState extends State<MarkdownEditorPage> {
   @override
   Widget build(BuildContext context) {
     return OmarchyScaffold(
-      navigationBar: OmarchyNavigationBar(
-        title: const Text('Markdown Editor'),
-        trailing: [],
-      ),
       status: AnimatedBuilder(
         animation: _controller,
         builder: (context, _) {
@@ -49,20 +45,41 @@ class _MarkdownEditorPageState extends State<MarkdownEditorPage> {
           );
         },
       ),
-      child: OmarchySplitPanel(
-        direction: TextDirection.rtl,
-        panelInitialSize: PanelSize.ratio(0.5),
-        panel: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, _) {
-            return MarkdownPreview(markdown: _controller.text);
-          },
-        ),
-        child: OmarchyTextInput(
-          controller: _controller,
-          padding: const EdgeInsets.all(24),
-          maxLines: null,
-        ),
+      child: Column(
+        children: [
+          OmarchyTabs(
+            children: [
+              OmarchyTab.closable(
+                isActive: true,
+                title: Text('README.md'),
+                onTap: () {},
+                onClose: () {},
+              ),
+              OmarchyTab.closable(
+                title: Text('DOC.md'),
+                onTap: () {},
+                onClose: () {},
+              ),
+            ],
+          ),
+          Expanded(
+            child: OmarchySplitPanel(
+              direction: TextDirection.rtl,
+              panelInitialSize: PanelSize.ratio(0.5),
+              panel: AnimatedBuilder(
+                animation: _controller,
+                builder: (context, _) {
+                  return MarkdownPreview(markdown: _controller.text);
+                },
+              ),
+              child: OmarchyTextInput(
+                controller: _controller,
+                padding: const EdgeInsets.all(24),
+                maxLines: null,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -230,7 +247,7 @@ class MarkdownPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OmarchyTheme.of(context);
     return Container(
-      color: theme.colors.normal.black,
+      color: theme.colors.normal.black.withValues(alpha: 0.3),
       margin: const EdgeInsets.only(right: 2, bottom: 2, top: 2),
       child: MarkdownWidget(data: markdown, padding: const EdgeInsets.all(24)),
     );

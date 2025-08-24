@@ -379,42 +379,7 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
             decoration: BoxDecoration(
               border: Border(bottom: BorderSide(color: theme.colors.border)),
             ),
-            child: Row(
-              children: [
-                const SizedBox(width: 32), // Icon space
-                Expanded(
-                  child: Row(
-                    children: [
-                      Text(
-                        'Name',
-                        style: theme.text.bold.copyWith(
-                          color: theme.colors.normal.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  width: 160,
-                  child: Text(
-                    'Date Modified',
-                    style: theme.text.bold.copyWith(
-                      color: theme.colors.normal.white,
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: 80,
-                  child: Text(
-                    'Size',
-                    style: theme.text.bold.copyWith(
-                      color: theme.colors.normal.white,
-                    ),
-                    textAlign: TextAlign.right,
-                  ),
-                ),
-              ],
-            ),
+            child: Headers(),
           ),
           Expanded(
             child: ListView(
@@ -443,6 +408,57 @@ class _FileExplorerPageState extends State<FileExplorerPage> {
   }
 }
 
+class Headers extends StatelessWidget {
+  const Headers({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = OmarchyTheme.of(context);
+    return LayoutBuilder(
+      builder: (context, layout) {
+        return Row(
+          children: [
+            const SizedBox(width: 32), // Icon space
+            Expanded(
+              child: Row(
+                children: [
+                  Text(
+                    'Name',
+                    style: theme.text.bold.copyWith(
+                      color: theme.colors.normal.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (layout.maxWidth > 400) ...[
+              SizedBox(
+                width: 160,
+                child: Text(
+                  'Date Modified',
+                  style: theme.text.bold.copyWith(
+                    color: theme.colors.normal.white,
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 80,
+                child: Text(
+                  'Size',
+                  style: theme.text.bold.copyWith(
+                    color: theme.colors.normal.white,
+                  ),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
 class FileTile extends StatelessWidget {
   const FileTile(this.item, {super.key, required this.onTap});
   final FileItem item;
@@ -452,30 +468,36 @@ class FileTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = OmarchyTheme.of(context);
     return OmarchyTile(
-      title: Row(
-        children: [
-          Expanded(
-            child: Row(
-              spacing: 8,
-              children: [Icon(item.icon, size: 24), Text(item.name)],
-            ),
-          ),
-          SizedBox(
-            width: 160,
-            child: Text(
-              item.formattedDate,
-              style: TextStyle(color: theme.colors.normal.white),
-            ),
-          ),
-          SizedBox(
-            width: 80,
-            child: Text(
-              item.formattedSize,
-              style: TextStyle(color: theme.colors.normal.white),
-              textAlign: TextAlign.right,
-            ),
-          ),
-        ],
+      title: LayoutBuilder(
+        builder: (context, layout) {
+          return Row(
+            children: [
+              Expanded(
+                child: Row(
+                  spacing: 8,
+                  children: [Icon(item.icon, size: 24), Text(item.name)],
+                ),
+              ),
+              if (layout.maxWidth > 400) ...[
+                SizedBox(
+                  width: 160,
+                  child: Text(
+                    item.formattedDate,
+                    style: TextStyle(color: theme.colors.normal.white),
+                  ),
+                ),
+                SizedBox(
+                  width: 80,
+                  child: Text(
+                    item.formattedSize,
+                    style: TextStyle(color: theme.colors.normal.white),
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+              ],
+            ],
+          );
+        },
       ),
       onTap: onTap,
     );
