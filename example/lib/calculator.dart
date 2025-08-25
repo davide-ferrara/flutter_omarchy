@@ -1,5 +1,5 @@
 import 'package:flutter_omarchy/flutter_omarchy.dart';
-import 'dart:math' show sqrt;
+import 'dart:math' show sqrt, pow, sin, cos, tan, pi;
 
 class CalculatorApp extends StatelessWidget {
   const CalculatorApp({super.key});
@@ -29,23 +29,27 @@ class _CalculatorPageState extends State<CalculatorPage> {
   Widget build(BuildContext context) {
     const rows = <List<CalculatorAction>>[
       [
+        MemoryClear(),
+        OpenParenthesis(),
+        CloseParenthesis(),
         ClearEntry(),
-        ClearAll(),
-        ClearAll(),
         Backspace(),
-        ClearEntry(),
+        ClearAll(),
         Operator.divide(),
       ],
       [
-        MemoryClear(),
-        SquareRoot(),
+        MemoryRecall(),
+        Sine(),
+        Power(),
         Digit(7),
         Digit(8),
         Digit(9),
         Operator.multiply(),
       ],
+
       [
-        MemoryRecall(),
+        MemoryAdd(),
+        Cosine(),
         Square(),
         Digit(4),
         Digit(5),
@@ -54,20 +58,14 @@ class _CalculatorPageState extends State<CalculatorPage> {
       ],
       [
         MemorySubtract(),
+        Tangent(),
         Percent(),
         Digit(1),
         Digit(2),
         Digit(3),
         Operator.plus(),
       ],
-      [
-        MemoryAdd(),
-        ToggleSign(),
-        ToggleSign(),
-        Digit(0),
-        DecimalPoint(),
-        Equals(),
-      ],
+      [Pi(), SquareRoot(), ToggleSign(), Digit(0), DecimalPoint(), Equals()],
     ];
 
     return OmarchyScaffold(
@@ -166,6 +164,11 @@ class CalculatorButton extends StatelessWidget {
     Percent() => AnsiColor.cyan,
     SquareRoot() => AnsiColor.cyan,
     Square() => AnsiColor.cyan,
+    Power() => AnsiColor.cyan,
+    Pi() => AnsiColor.cyan,
+    OpenParenthesis() => AnsiColor.blue,
+    CloseParenthesis() => AnsiColor.blue,
+    Trigonometric() => AnsiColor.magenta,
     Equals() => AnsiColor.green,
     Digit() => AnsiColor.white,
     DecimalPoint() => AnsiColor.white,
@@ -256,6 +259,7 @@ class Operator extends CalculatorAction {
   const Operator.minus() : type = OperatorType.minus;
   const Operator.multiply() : type = OperatorType.multiply;
   const Operator.divide() : type = OperatorType.divide;
+  const Operator.power() : type = OperatorType.power;
 
   @override
   String toString() {
@@ -267,7 +271,8 @@ enum OperatorType {
   plus,
   minus,
   multiply,
-  divide;
+  divide,
+  power;
 
   String toSymbol() {
     switch (this) {
@@ -279,6 +284,8 @@ enum OperatorType {
         return '×';
       case OperatorType.divide:
         return '÷';
+      case OperatorType.power:
+        return '^';
     }
   }
 }
@@ -405,6 +412,81 @@ class MemoryClear extends Memory {
   }
 }
 
+/// Power operation (x^y)
+class Power extends CalculatorAction {
+  const Power();
+
+  @override
+  String toString() {
+    return 'x^y';
+  }
+}
+
+/// Open parenthesis
+class OpenParenthesis extends CalculatorAction {
+  const OpenParenthesis();
+
+  @override
+  String toString() {
+    return '(';
+  }
+}
+
+/// Close parenthesis
+class CloseParenthesis extends CalculatorAction {
+  const CloseParenthesis();
+
+  @override
+  String toString() {
+    return ')';
+  }
+}
+
+/// Trigonometric operations
+sealed class Trigonometric extends CalculatorAction {
+  const Trigonometric();
+}
+
+/// Sine function
+class Sine extends Trigonometric {
+  const Sine();
+
+  @override
+  String toString() {
+    return 'sin';
+  }
+}
+
+/// Cosine function
+class Cosine extends Trigonometric {
+  const Cosine();
+
+  @override
+  String toString() {
+    return 'cos';
+  }
+}
+
+/// Tangent function
+class Tangent extends Trigonometric {
+  const Tangent();
+
+  @override
+  String toString() {
+    return 'tan';
+  }
+}
+
+/// Pi constant (π)
+class Pi extends CalculatorAction {
+  const Pi();
+
+  @override
+  String toString() {
+    return 'π';
+  }
+}
+
 // -----------------------------
 // Engine
 // -----------------------------
@@ -419,6 +501,9 @@ class CalculatorEngine {
   String? _error; // non-null if an error occurred during evaluation
   double _memoryValue = 0.0; // value stored in memory
   bool _hasMemory = false; // whether memory has a value
+  int _parenthesisCount = 0; // count of open parentheses
+  bool _expectingPowerOperand =
+      false; // whether we're expecting the second operand for power
 
   // --- Public API ---
 
@@ -449,6 +534,10 @@ class CalculatorEngine {
         sb.write(_trimTrailingZeros(t.value));
       } else if (t is _OpTok) {
         sb.write(" ${t.type.toSymbol()} ");
+      } else if (t is _ParenTok) {
+        sb.write(t.isOpen ? "(" : ")");
+      } else if (t is _FuncTok) {
+        sb.write("${t.name}(");
       }
     }
     if (_currentEntry.isNotEmpty) {
@@ -628,6 +717,87 @@ class CalculatorEngine {
       return;
     }
 
+    if (action is Power) {
+      _commitEntryIfAny();
+      _tokens.add(_OpTok(OperatorType.power));
+      return;
+    }
+
+    if (action is OpenParenthesis) {
+      if (_currentEntry.isNotEmpty && double.tryParse(_currentEntry) != null) {
+        // Implicit multiplication: 2(3+4) means 2*(3+4)
+        _commitEntryIfAny();
+        _tokens.add(_OpTok(OperatorType.multiply));
+      }
+      _tokens.add(_ParenTok(true));
+      _parenthesisCount++;
+      return;
+    }
+
+    if (action is CloseParenthesis) {
+      if (_parenthesisCount <= 0)
+        return; // Ignore if no matching open parenthesis
+      _commitEntryIfAny();
+      _tokens.add(_ParenTok(false));
+      _parenthesisCount--;
+      return;
+    }
+
+    if (action is Sine) {
+      if (_currentEntry.isEmpty) return;
+      final v = double.tryParse(_currentEntry);
+      if (v != null) {
+        // Convert to radians if needed
+        final radians = v * pi / 180.0;
+        _currentEntry = _trimTrailingZeros(sin(radians));
+      }
+      return;
+    }
+
+    if (action is Cosine) {
+      if (_currentEntry.isEmpty) return;
+      final v = double.tryParse(_currentEntry);
+      if (v != null) {
+        // Convert to radians if needed
+        final radians = v * pi / 180.0;
+        _currentEntry = _trimTrailingZeros(cos(radians));
+      }
+      return;
+    }
+
+    if (action is Tangent) {
+      if (_currentEntry.isEmpty) return;
+      final v = double.tryParse(_currentEntry);
+      if (v != null) {
+        // Check for invalid input (90, 270, etc. degrees)
+        final degrees = v % 360;
+        if (degrees == 90 || degrees == 270) {
+          _error = "Invalid input";
+          return;
+        }
+        // Convert to radians
+        final radians = v * pi / 180.0;
+        _currentEntry = _trimTrailingZeros(tan(radians));
+      }
+      return;
+    }
+
+    if (action is Pi) {
+      if (_justEvaluated) {
+        _tokens.clear();
+        _justEvaluated = false;
+      }
+
+      // If there's a number entry, treat pi as multiplication (e.g., 2π = 2*π)
+      if (_currentEntry.isNotEmpty && double.tryParse(_currentEntry) != null) {
+        _commitEntryIfAny();
+        _tokens.add(_OpTok(OperatorType.multiply));
+      }
+
+      _currentEntry = _trimTrailingZeros(pi);
+      return;
+    }
+
     if (action is Operator) {
       _commitEntryIfAny();
       _error = null;
@@ -688,7 +858,7 @@ class CalculatorEngine {
   /// Evaluate tokens with operator precedence using a simple shunting-yard.
   double _evaluateTokens() {
     final rpn = <_Token>[];
-    final ops = <_OpTok>[];
+    final ops = <_Token>[];
 
     int prec(OperatorType t) {
       switch (t) {
@@ -698,6 +868,8 @@ class CalculatorEngine {
         case OperatorType.multiply:
         case OperatorType.divide:
           return 2;
+        case OperatorType.power:
+          return 3;
       }
     }
 
@@ -705,13 +877,38 @@ class CalculatorEngine {
       if (t is _NumberTok) {
         rpn.add(t);
       } else if (t is _OpTok) {
-        while (ops.isNotEmpty && prec(ops.last.type) >= prec(t.type)) {
+        while (ops.isNotEmpty &&
+            ops.last is _OpTok &&
+            prec((ops.last as _OpTok).type) >= prec(t.type)) {
           rpn.add(ops.removeLast());
         }
         ops.add(t);
+      } else if (t is _ParenTok) {
+        if (t.isOpen) {
+          // Opening parenthesis
+          ops.add(t);
+        } else {
+          // Closing parenthesis
+          while (ops.isNotEmpty && ops.last is! _ParenTok) {
+            rpn.add(ops.removeLast());
+          }
+          if (ops.isNotEmpty && ops.last is _ParenTok) {
+            ops.removeLast(); // Remove the opening parenthesis
+          }
+        }
+      } else if (t is _FuncTok) {
+        ops.add(t);
       }
     }
-    rpn.addAll(ops.reversed);
+
+    // Pop any remaining operators
+    while (ops.isNotEmpty) {
+      final op = ops.removeLast();
+      if (op is! _ParenTok) {
+        // Skip any unmatched parentheses
+        rpn.add(op);
+      }
+    }
 
     final stack = <double>[];
     for (final t in rpn) {
@@ -735,6 +932,24 @@ class CalculatorEngine {
             return double.infinity; // will be handled by _safeEvaluate
           case OperatorType.divide:
             stack.add(a / b);
+            break;
+          case OperatorType.power:
+            stack.add(pow(a, b) as double);
+            break;
+        }
+      } else if (t is _FuncTok) {
+        if (stack.isEmpty) return double.nan;
+        final a = stack.removeLast();
+        switch (t.name) {
+          case 'sin':
+            stack.add(sin(a * pi / 180.0));
+            break;
+          case 'cos':
+            stack.add(cos(a * pi / 180.0));
+            break;
+          case 'tan':
+            if (a % 180 == 90) return double.infinity;
+            stack.add(tan(a * pi / 180.0));
             break;
         }
       }
@@ -772,4 +987,14 @@ class _NumberTok extends _Token {
 class _OpTok extends _Token {
   final OperatorType type;
   const _OpTok(this.type);
+}
+
+class _ParenTok extends _Token {
+  final bool isOpen;
+  const _ParenTok(this.isOpen);
+}
+
+class _FuncTok extends _Token {
+  final String name;
+  const _FuncTok(this.name);
 }
