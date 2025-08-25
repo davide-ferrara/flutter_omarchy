@@ -1,4 +1,5 @@
 import 'package:flutter_omarchy/flutter_omarchy.dart';
+import 'dart:math' show sqrt;
 
 class CalculatorApp extends StatelessWidget {
   const CalculatorApp({super.key});
@@ -27,11 +28,46 @@ class _CalculatorPageState extends State<CalculatorPage> {
   @override
   Widget build(BuildContext context) {
     const rows = <List<CalculatorAction>>[
-      [ClearAll(), Backspace(), Percent(), Operator.divide()],
-      [Digit(7), Digit(8), Digit(9), Operator.multiply()],
-      [Digit(4), Digit(5), Digit(6), Operator.minus()],
-      [Digit(1), Digit(2), Digit(3), Operator.plus()],
-      [ToggleSign(), Digit(0), DecimalPoint(), Equals()],
+      [
+        ClearEntry(),
+        ClearAll(),
+        ClearAll(),
+        Backspace(),
+        ClearEntry(),
+        Operator.divide(),
+      ],
+      [
+        MemoryClear(),
+        SquareRoot(),
+        Digit(7),
+        Digit(8),
+        Digit(9),
+        Operator.multiply(),
+      ],
+      [
+        MemoryRecall(),
+        Square(),
+        Digit(4),
+        Digit(5),
+        Digit(6),
+        Operator.minus(),
+      ],
+      [
+        MemorySubtract(),
+        Percent(),
+        Digit(1),
+        Digit(2),
+        Digit(3),
+        Operator.plus(),
+      ],
+      [
+        MemoryAdd(),
+        ToggleSign(),
+        ToggleSign(),
+        Digit(0),
+        DecimalPoint(),
+        Equals(),
+      ],
     ];
 
     return OmarchyScaffold(
@@ -128,10 +164,13 @@ class CalculatorButton extends StatelessWidget {
     Backspace() => AnsiColor.red,
     ToggleSign() => AnsiColor.blue,
     Percent() => AnsiColor.cyan,
+    SquareRoot() => AnsiColor.cyan,
+    Square() => AnsiColor.cyan,
     Equals() => AnsiColor.green,
     Digit() => AnsiColor.white,
     DecimalPoint() => AnsiColor.white,
     Operator() => AnsiColor.yellow,
+    Memory() => AnsiColor.magenta,
   };
 
   Widget symbol(bool isSmall) => switch (action) {
@@ -301,6 +340,71 @@ class Percent extends CalculatorAction {
   }
 }
 
+/// Calculate square root of the current entry
+class SquareRoot extends CalculatorAction {
+  const SquareRoot();
+
+  @override
+  String toString() {
+    return '√';
+  }
+}
+
+/// Calculate square of the current entry
+class Square extends CalculatorAction {
+  const Square();
+
+  @override
+  String toString() {
+    return 'x²';
+  }
+}
+
+/// Memory operations
+sealed class Memory extends CalculatorAction {
+  const Memory();
+}
+
+/// Memory store (M+)
+class MemoryAdd extends Memory {
+  const MemoryAdd();
+
+  @override
+  String toString() {
+    return 'M+';
+  }
+}
+
+/// Memory subtract (M-)
+class MemorySubtract extends Memory {
+  const MemorySubtract();
+
+  @override
+  String toString() {
+    return 'M-';
+  }
+}
+
+/// Memory recall (MR)
+class MemoryRecall extends Memory {
+  const MemoryRecall();
+
+  @override
+  String toString() {
+    return 'MR';
+  }
+}
+
+/// Memory clear (MC)
+class MemoryClear extends Memory {
+  const MemoryClear();
+
+  @override
+  String toString() {
+    return 'MC';
+  }
+}
+
 // -----------------------------
 // Engine
 // -----------------------------
@@ -313,6 +417,8 @@ class CalculatorEngine {
   final List<_Token> _tokens = <_Token>[]; // committed numbers & operators
   bool _justEvaluated = false; // last action was Equals
   String? _error; // non-null if an error occurred during evaluation
+  double _memoryValue = 0.0; // value stored in memory
+  bool _hasMemory = false; // whether memory has a value
 
   // --- Public API ---
 
@@ -451,6 +557,74 @@ class CalculatorEngine {
       if (v != null) {
         _currentEntry = _trimTrailingZeros(v / 100.0);
       }
+      return;
+    }
+
+    if (action is SquareRoot) {
+      if (_currentEntry.isEmpty) return;
+      final v = double.tryParse(_currentEntry);
+      if (v != null) {
+        if (v < 0) {
+          _error = "Invalid input";
+          return;
+        }
+        _currentEntry = _trimTrailingZeros(sqrt(v));
+      }
+      return;
+    }
+
+    if (action is Square) {
+      if (_currentEntry.isEmpty) return;
+      final v = double.tryParse(_currentEntry);
+      if (v != null) {
+        _currentEntry = _trimTrailingZeros(v * v);
+      }
+      return;
+    }
+
+    if (action is MemoryAdd) {
+      if (_currentEntry.isEmpty) {
+        // Use last result if no current entry
+        final value = _evaluateTokens();
+        _memoryValue += value;
+      } else {
+        final v = double.tryParse(_currentEntry);
+        if (v != null) {
+          _memoryValue += v;
+        }
+      }
+      _hasMemory = true;
+      return;
+    }
+
+    if (action is MemorySubtract) {
+      if (_currentEntry.isEmpty) {
+        // Use last result if no current entry
+        final value = _evaluateTokens();
+        _memoryValue -= value;
+      } else {
+        final v = double.tryParse(_currentEntry);
+        if (v != null) {
+          _memoryValue -= v;
+        }
+      }
+      _hasMemory = true;
+      return;
+    }
+
+    if (action is MemoryRecall) {
+      if (!_hasMemory) return;
+      if (_justEvaluated) {
+        _tokens.clear();
+        _justEvaluated = false;
+      }
+      _currentEntry = _trimTrailingZeros(_memoryValue);
+      return;
+    }
+
+    if (action is MemoryClear) {
+      _memoryValue = 0.0;
+      _hasMemory = false;
       return;
     }
 
@@ -599,4 +773,3 @@ class _OpTok extends _Token {
   final OperatorType type;
   const _OpTok(this.type);
 }
-
