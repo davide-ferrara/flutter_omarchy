@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
 import 'dart:math' show sqrt, pow, sin, cos, tan, pi, e;
 
@@ -76,19 +77,29 @@ class _CalculatorPageState extends State<CalculatorPage> {
       ],
     ];
 
+    final theme = OmarchyTheme.of(context);
     return OmarchyScaffold(
-      child: Padding(
-        padding: const EdgeInsets.all(14.0),
-        child: LayoutBuilder(
-          builder: (context, layout) {
-            final startCol = (layout.maxWidth > 800) ? 0 : 3;
-            return Column(
+      child: LayoutBuilder(
+        builder: (context, layout) {
+          if (layout.maxWidth < 40 || layout.maxHeight < 84) {
+            return Center(
+              child: Icon(
+                OmarchyIcons.faMaximize,
+                color: theme.colors.normal.black,
+              ),
+            );
+          }
+          final startCol = (layout.maxWidth > 800) ? 0 : 3;
+          return Padding(
+            padding: const EdgeInsets.all(14.0),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
                   child: Column(
                     spacing: CalculatorApp.buttonSpacing,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Display(
                         history: layout.maxHeight > 500
@@ -96,33 +107,34 @@ class _CalculatorPageState extends State<CalculatorPage> {
                             : null,
                         display: engine.display,
                       ),
-                      const SizedBox(height: 8),
-
-                      for (final row in rows)
-                        Expanded(
-                          child: Row(
-                            spacing: CalculatorApp.buttonSpacing,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: row.skip(startCol).map((action) {
-                              return CalculatorButton(
-                                key: ValueKey(action),
-                                action,
-                                onPressed: () {
-                                  setState(() {
-                                    engine.execute(action);
-                                  });
-                                },
-                              );
-                            }).toList(),
+                      if (layout.maxWidth > 100 && layout.maxHeight > 220) ...[
+                        const SizedBox(height: 8),
+                        for (final row in rows)
+                          Expanded(
+                            child: Row(
+                              spacing: CalculatorApp.buttonSpacing,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: row.skip(startCol).map((action) {
+                                return CalculatorButton(
+                                  key: ValueKey(action),
+                                  action,
+                                  onPressed: () {
+                                    setState(() {
+                                      engine.execute(action);
+                                    });
+                                  },
+                                );
+                              }).toList(),
+                            ),
                           ),
-                        ),
+                      ],
                     ],
                   ),
                 ),
               ],
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -143,17 +155,19 @@ class Display extends StatelessWidget {
           Text(
             history,
             style: theme.text.italic.copyWith(
-              fontSize: 12,
+              fontSize: 14,
               color: theme.colors.bright.black,
             ),
             maxLines: 1,
             textAlign: TextAlign.right,
           ),
         FittedBox(
-          child: Text(
+          child: SelectableText(
             display,
             style: TextStyle(fontSize: 48),
             maxLines: 1,
+            cursorColor: theme.colors.normal.white,
+            selectionColor: theme.colors.normal.white,
             textAlign: TextAlign.right,
           ),
         ),
@@ -203,7 +217,7 @@ class CalculatorButton extends StatelessWidget {
     return Expanded(
       child: LayoutBuilder(
         builder: (context, layout) {
-          final isSmall = layout.maxHeight < 80 || layout.maxWidth < 80;
+          final isSmall = layout.maxHeight < 75 || layout.maxWidth < 80;
           return OmarchyButton(
             style: OmarchyButtonStyle.filled(color, padding: EdgeInsets.zero),
             onPressed: onPressed,
@@ -992,7 +1006,7 @@ class CalculatorEngine {
         }
       }
     }
-    return stack.isEmpty ? 0.0 : stack.single;
+    return stack.isEmpty ? 0.0 : stack.fold(1, (v, x) => v * x);
   }
 
   double? _safeEvaluate() {
