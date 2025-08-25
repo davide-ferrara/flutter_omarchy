@@ -1,5 +1,5 @@
 import 'package:flutter_omarchy/flutter_omarchy.dart';
-import 'dart:math' show sqrt, pow, sin, cos, tan, pi;
+import 'dart:math' show sqrt, pow, sin, cos, tan, pi, e;
 
 class CalculatorApp extends StatelessWidget {
   const CalculatorApp({super.key});
@@ -65,7 +65,15 @@ class _CalculatorPageState extends State<CalculatorPage> {
         Digit(3),
         Operator.plus(),
       ],
-      [Pi(), SquareRoot(), ToggleSign(), Digit(0), DecimalPoint(), Equals()],
+      [
+        Pi(),
+        Euler(),
+        SquareRoot(),
+        ToggleSign(),
+        Digit(0),
+        DecimalPoint(),
+        Equals(),
+      ],
     ];
 
     return OmarchyScaffold(
@@ -73,6 +81,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
         padding: const EdgeInsets.all(14.0),
         child: LayoutBuilder(
           builder: (context, layout) {
+            final startCol = (layout.maxWidth > 800) ? 0 : 3;
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -88,13 +97,15 @@ class _CalculatorPageState extends State<CalculatorPage> {
                         display: engine.display,
                       ),
                       const SizedBox(height: 8),
+
                       for (final row in rows)
                         Expanded(
                           child: Row(
                             spacing: CalculatorApp.buttonSpacing,
                             crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: row.map((action) {
+                            children: row.skip(startCol).map((action) {
                               return CalculatorButton(
+                                key: ValueKey(action),
                                 action,
                                 onPressed: () {
                                   setState(() {
@@ -166,9 +177,10 @@ class CalculatorButton extends StatelessWidget {
     Square() => AnsiColor.cyan,
     Power() => AnsiColor.cyan,
     Pi() => AnsiColor.cyan,
+    Euler() => AnsiColor.cyan,
     OpenParenthesis() => AnsiColor.blue,
     CloseParenthesis() => AnsiColor.blue,
-    Trigonometric() => AnsiColor.magenta,
+    Trigonometric() => AnsiColor.cyan,
     Equals() => AnsiColor.green,
     Digit() => AnsiColor.white,
     DecimalPoint() => AnsiColor.white,
@@ -487,6 +499,16 @@ class Pi extends CalculatorAction {
   }
 }
 
+/// Euler's number (e)
+class Euler extends CalculatorAction {
+  const Euler();
+
+  @override
+  String toString() {
+    return 'e';
+  }
+}
+
 // -----------------------------
 // Engine
 // -----------------------------
@@ -795,6 +817,22 @@ class CalculatorEngine {
       }
 
       _currentEntry = _trimTrailingZeros(pi);
+      return;
+    }
+
+    if (action is Euler) {
+      if (_justEvaluated) {
+        _tokens.clear();
+        _justEvaluated = false;
+      }
+
+      // If there's a number entry, treat e as multiplication (e.g., 2e = 2*e)
+      if (_currentEntry.isNotEmpty && double.tryParse(_currentEntry) != null) {
+        _commitEntryIfAny();
+        _tokens.add(_OpTok(OperatorType.multiply));
+      }
+
+      _currentEntry = _trimTrailingZeros(e);
       return;
     }
 
