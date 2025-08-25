@@ -553,11 +553,19 @@ class CalculatorEngine {
 
   /// The text to show on the calculator main display.
   /// If an error occurred, this returns a message like "Error" or "Division by zero".
-  String get display =>
-      _error ??
-      (_currentEntry.isEmpty
-          ? _formatNumber(_evaluateTokens())
-          : _currentEntry);
+  /// Shows the current result of the calculation, ignoring the last operator if present.
+  String get display {
+    if (_error != null) return _error!;
+    
+    // If we're currently entering a number, show that
+    if (_currentEntry.isNotEmpty) return _currentEntry;
+    
+    // Calculate the current result (this will ignore the last operator if present)
+    final result = _evaluateTokens();
+    
+    // Format and return the result
+    return _formatNumber(result);
+  }
 
   /// A human-friendly one-line history like: "12 + 7 × 3 = 33".
   String get historyDisplay {
@@ -908,7 +916,22 @@ class CalculatorEngine {
   }
 
   /// Evaluate tokens with operator precedence using a simple shunting-yard.
+  /// Calculates the intermediate result of the expression so far, ignoring the last operator
+  /// if it's at the end of the token list.
   double _evaluateTokens() {
+    // If tokens is empty, return 0
+    if (_tokens.isEmpty) return 0.0;
+    
+    // Create a copy of tokens to work with
+    final tokensCopy = List<_Token>.from(_tokens);
+    
+    // If the last token is an operator, remove it for intermediate calculation
+    if (tokensCopy.isNotEmpty && tokensCopy.last is _OpTok) {
+      tokensCopy.removeLast();
+    }
+    
+    // If after removing the last operator we have no tokens, return 0
+    if (tokensCopy.isEmpty) return 0.0;
     final rpn = <_Token>[];
     final ops = <_Token>[];
 
@@ -925,7 +948,7 @@ class CalculatorEngine {
       }
     }
 
-    for (final t in _tokens) {
+    for (final t in tokensCopy) {
       if (t is _NumberTok) {
         rpn.add(t);
       } else if (t is _OpTok) {
@@ -961,13 +984,25 @@ class CalculatorEngine {
         rpn.add(op);
       }
     }
+    
+    // If we have no tokens in RPN (e.g., only open parentheses), return 0
+    if (rpn.isEmpty) return 0.0;
+    
+    // If we have only one token and it's a number, return it directly
+    if (rpn.length == 1 && rpn.first is _NumberTok) {
+      return (rpn.first as _NumberTok).value;
+    }
 
     final stack = <double>[];
     for (final t in rpn) {
       if (t is _NumberTok) {
         stack.add(t.value);
       } else if (t is _OpTok) {
-        if (stack.length < 2) return double.nan;
+        // If we don't have enough operands, return the last value on the stack
+        // or 0 if the stack is empty
+        if (stack.length < 2) {
+          return stack.isEmpty ? 0.0 : stack.last;
+        }
         final b = stack.removeLast();
         final a = stack.removeLast();
         switch (t.type) {
@@ -990,7 +1025,7 @@ class CalculatorEngine {
             break;
         }
       } else if (t is _FuncTok) {
-        if (stack.isEmpty) return double.nan;
+        if (stack.isEmpty) return 0.0;
         final a = stack.removeLast();
         switch (t.name) {
           case 'sin':
@@ -1006,7 +1041,7 @@ class CalculatorEngine {
         }
       }
     }
-    return stack.isEmpty ? 0.0 : stack.fold(1, (v, x) => v * x);
+    return stack.isEmpty ? 0.0 : stack.last;
   }
 
   double? _safeEvaluate() {
