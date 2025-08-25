@@ -3,7 +3,7 @@ import 'package:flutter_omarchy/flutter_omarchy.dart';
 class CalculatorApp extends StatelessWidget {
   const CalculatorApp({super.key});
 
-  static const buttonSpacing = 14.0;
+  static const buttonSpacing = 4.0;
 
   @override
   Widget build(BuildContext context) {
@@ -26,10 +26,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = OmarchyTheme.of(context);
-
     const rows = <List<CalculatorAction>>[
-      [ClearAll(), ClearEntry(), Percent(), Operator.divide()],
+      [ClearAll(), Backspace(), Percent(), Operator.divide()],
       [Digit(7), Digit(8), Digit(9), Operator.multiply()],
       [Digit(4), Digit(5), Digit(6), Operator.minus()],
       [Digit(1), Digit(2), Digit(3), Operator.plus()],
@@ -37,67 +35,84 @@ class _CalculatorPageState extends State<CalculatorPage> {
     ];
 
     return OmarchyScaffold(
-      navigationBar: const OmarchyNavigationBar(title: Text('Calculator')),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                color: theme.colors.normal.black.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(2),
-                border: Border.all(color: theme.colors.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    engine.historyDisplay,
-                    style: theme.text.italic.copyWith(
-                      fontSize: 12,
-                      color: theme.colors.bright.black,
-                    ),
-                    textAlign: TextAlign.right,
-                  ),
-                  Text(
-                    engine.display,
-                    style: const TextStyle(fontSize: 48),
-                    textAlign: TextAlign.right,
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Column(
-                spacing: CalculatorApp.buttonSpacing,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final row in rows)
-                    Expanded(
-                      child: Row(
-                        spacing: CalculatorApp.buttonSpacing,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: row.map((action) {
-                          return CalculatorButton(
-                            action,
-                            onPressed: () {
-                              setState(() {
-                                engine.execute(action);
-                              });
-                            },
-                          );
-                        }).toList(),
+        padding: const EdgeInsets.all(14.0),
+        child: LayoutBuilder(
+          builder: (context, layout) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Column(
+                    spacing: CalculatorApp.buttonSpacing,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Display(
+                        history: layout.maxHeight > 500
+                            ? engine.historyDisplay
+                            : null,
+                        display: engine.display,
                       ),
-                    ),
-                ],
-              ),
-            ),
-          ],
+                      const SizedBox(height: 8),
+                      for (final row in rows)
+                        Expanded(
+                          child: Row(
+                            spacing: CalculatorApp.buttonSpacing,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: row.map((action) {
+                              return CalculatorButton(
+                                action,
+                                onPressed: () {
+                                  setState(() {
+                                    engine.execute(action);
+                                  });
+                                },
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
+    );
+  }
+}
+
+class Display extends StatelessWidget {
+  const Display({super.key, required this.history, required this.display});
+  final String? history;
+  final String display;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = OmarchyTheme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (history case final history?)
+          Text(
+            history,
+            style: theme.text.italic.copyWith(
+              fontSize: 12,
+              color: theme.colors.bright.black,
+            ),
+            maxLines: 1,
+            textAlign: TextAlign.right,
+          ),
+        FittedBox(
+          child: Text(
+            display,
+            style: TextStyle(fontSize: 48),
+            maxLines: 1,
+            textAlign: TextAlign.right,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -110,7 +125,7 @@ class CalculatorButton extends StatelessWidget {
   AnsiColor get color => switch (action) {
     ClearAll() => AnsiColor.red,
     ClearEntry() => AnsiColor.red,
-    Backspace() => AnsiColor.magenta,
+    Backspace() => AnsiColor.red,
     ToggleSign() => AnsiColor.blue,
     Percent() => AnsiColor.cyan,
     Equals() => AnsiColor.green,
@@ -119,15 +134,28 @@ class CalculatorButton extends StatelessWidget {
     Operator() => AnsiColor.yellow,
   };
 
+  Widget symbol(bool isSmall) => switch (action) {
+    Backspace() => Icon(
+      OmarchyIcons.mdBackspaceOutline,
+      size: isSmall ? 30 : 48,
+    ),
+    final other => Text(
+      other.toString(),
+      style: TextStyle(fontSize: isSmall ? 20 : 32),
+    ),
+  };
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: OmarchyButton(
-        style: OmarchyButtonStyle.filled(color),
-        onPressed: onPressed,
-        child: Center(
-          child: Text(action.toString(), style: TextStyle(fontSize: 32)),
-        ),
+      child: LayoutBuilder(
+        builder: (context, layout) {
+          final isSmall = layout.maxHeight < 80 || layout.maxWidth < 80;
+          return OmarchyButton(
+            style: OmarchyButtonStyle.filled(color, padding: EdgeInsets.zero),
+            onPressed: onPressed,
+            child: Center(child: symbol(isSmall)),
+          );
+        },
       ),
     );
   }
