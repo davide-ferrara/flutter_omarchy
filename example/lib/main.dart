@@ -3,7 +3,7 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:example/calculator.dart';
+import 'package:example/calculator/app.dart';
 import 'package:example/counter.dart';
 import 'package:example/file_explorer.dart';
 import 'package:example/gallery.dart';

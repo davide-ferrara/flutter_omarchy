@@ -1,7 +1,9 @@
 export 'utils/selected.dart';
 export 'utils/grouping.dart';
 export 'utils/pointer_area.dart';
+export 'utils/simulated_press.dart';
 export 'utils/optional.dart';
+export 'utils/fade_in.dart';
 
 export 'button.dart';
 export 'resize_divider.dart';

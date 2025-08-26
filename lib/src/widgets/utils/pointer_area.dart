@@ -69,13 +69,19 @@ class PointerStateProvider extends InheritedWidget {
     required super.child,
   });
 
-  final PointerState state;
+  final PointerState? state;
 
   static PointerState of(BuildContext context) {
     final provider = context
         .dependOnInheritedWidgetOfExactType<PointerStateProvider>();
     assert(provider != null, 'No TapStateProvider found in context');
-    return provider!.state;
+    return provider!.state!;
+  }
+
+  static PointerState? maybeOf(BuildContext context) {
+    final provider = context
+        .dependOnInheritedWidgetOfExactType<PointerStateProvider>();
+    return provider?.state;
   }
 
   @override
@@ -302,15 +308,17 @@ class _PointerAreaState extends State<PointerArea> {
         ? widget.hoverCursor
         : SystemMouseCursors.basic;
 
-    final state = PointerState(
-      isEnabled:
-          widget.onTap != null ||
-          widget.onSecondaryTap != null ||
-          widget.onLongPress != null,
-      hasFocus: _hasFocus,
-      isPressed: _pressed,
-      isHovering: _hovering,
-    );
+    final state =
+        PointerStateProvider.maybeOf(context) ??
+        PointerState(
+          isEnabled:
+              widget.onTap != null ||
+              widget.onSecondaryTap != null ||
+              widget.onLongPress != null,
+          hasFocus: _hasFocus,
+          isPressed: _pressed,
+          isHovering: _hovering,
+        );
     Widget? child = widget.child != null
         ? PointerStateProvider(state: state, child: widget.child!)
         : null;
