@@ -15,18 +15,43 @@ class OmarchyStatusBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = OmarchyTheme.of(context);
+    final height = theme.text.normal.fontSize! * 1.8;
     return Container(
       color: theme.colors.normal.black,
+      height: height,
       child: DefaultTextStyle(
         style: DefaultTextStyle.of(context).style,
         maxLines: 1,
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (leading case final leading?)
               Expanded(
                 child: SidePositioning(
                   position: SidePosition.leading,
-                  child: OverflowBar(children: [...leading.group()]),
+                  child: Stack(
+                    children: [
+                      ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          ...leading.group(),
+                          const SizedBox(width: 14),
+                        ],
+                      ),
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                theme.colors.normal.black.withValues(alpha: 0),
+                                theme.colors.normal.black,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               )
             else
@@ -38,7 +63,9 @@ class OmarchyStatusBar extends StatelessWidget {
                 fit: FlexFit.tight,
                 child: SidePositioning(
                   position: SidePosition.leading,
-                  child: OverflowBar(
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    shrinkWrap: true,
                     children: [...trailing..group()].reversed.toList(),
                   ),
                 ),
@@ -74,7 +101,7 @@ class OmarchyStatus extends StatelessWidget {
         onTap: onTap,
         builder: (context, state, child) {
           return AnimatedContainer(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
             duration: const Duration(milliseconds: 120),
             decoration: BoxDecoration(
               color: switch (state) {
@@ -83,15 +110,21 @@ class OmarchyStatus extends StatelessWidget {
                 _ => normal.withValues(alpha: 0.2),
               },
             ),
-            child: DefaultForeground(foreground: bright, child: this.child),
+            child: DefaultForeground(
+              foreground: bright,
+              child: Center(child: this.child),
+            ),
           );
         },
       );
     }
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
       color: normal.withValues(alpha: 0.3),
-      child: DefaultForeground(foreground: bright, child: child),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: DefaultForeground(
+        foreground: bright,
+        child: Center(child: child),
+      ),
     );
   }
 }
