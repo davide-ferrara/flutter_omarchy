@@ -1,8 +1,8 @@
-import 'package:example/calculator/action.dart';
-import 'package:example/calculator/engine.dart';
+import 'package:example/calculator/engine/command.dart';
+import 'package:example/calculator/notifier.dart';
 import 'package:example/calculator/widgets/buttons.dart';
 import 'package:example/calculator/widgets/display.dart';
-import 'package:flutter/material.dart';
+import 'package:example/calculator/widgets/history.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
 
@@ -26,10 +26,11 @@ class CalculatorPage extends StatefulWidget {
 }
 
 class _CalculatorPageState extends State<CalculatorPage> {
-  final engine = CalculatorEngine();
+  final engine = CalculatorNotifier();
   final _focusNode = FocusNode();
+  final _mainPane = GlobalKey();
 
-  final _simulatedPress = <CalculatorAction, SimulatedPressController>{
+  final _simulatedPress = <Command, SimulatedPressController>{
     for (final row in ButtonGrid.rows)
       for (final action in row) action: SimulatedPressController(),
   };
@@ -56,13 +57,56 @@ class _CalculatorPageState extends State<CalculatorPage> {
               ),
             );
           }
+          Widget child = Padding(
+            key: _mainPane,
+            padding: const EdgeInsets.all(14.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Display(
+                  history: layout.maxHeight > 500
+                      ? engine.historyDisplay
+                      : null,
+                  display: engine.display,
+                  isConfirmed: engine.isDisplayConfirmed,
+                  isIntermediateValue: engine.isIntermediateValue,
+                  isCondensed: layout.maxHeight < 1000,
+                ),
+                if (layout.maxWidth > 100 && layout.maxHeight > 220) ...[
+                  const SizedBox(height: 14),
+                  Expanded(
+                    child: ButtonGrid(
+                      simulated: _simulatedPress,
+                      onPressed: (action) {
+                        setState(() {
+                          engine.execute(action);
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          );
+
+          if (layout.maxWidth > 1200) {
+            child = Row(
+              children: [
+                Expanded(child: FadeIn(child: HistoryPane())),
+                OmarchyDivider.horizontal(),
+                SizedBox(width: 1000, child: child),
+              ],
+            );
+          }
+
           return Focus(
             focusNode: _focusNode,
             descendantsAreFocusable: false,
             autofocus: true,
             onKeyEvent: (node, event) {
               if (event is! KeyDownEvent) return KeyEventResult.ignored;
-              void press(CalculatorAction action) {
+              void press(Command action) {
                 setState(() {
                   engine.execute(action);
                 });
@@ -166,45 +210,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
               }
               return KeyEventResult.ignored;
             },
-            child: Padding(
-              padding: const EdgeInsets.all(14.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Display(
-                          history: layout.maxHeight > 500
-                              ? engine.historyDisplay
-                              : null,
-                          display: engine.display,
-                          isConfirmed: engine.isDisplayConfirmed,
-                          isIntermediateValue: engine.isIntermediateValue,
-                          isCondensed: layout.maxHeight < 1000,
-                        ),
-                        if (layout.maxWidth > 100 &&
-                            layout.maxHeight > 220) ...[
-                          const SizedBox(height: 14),
-                          Expanded(
-                            child: ButtonGrid(
-                              simulated: _simulatedPress,
-                              onPressed: (action) {
-                                setState(() {
-                                  engine.execute(action);
-                                });
-                              },
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            child: child,
           );
         },
       ),

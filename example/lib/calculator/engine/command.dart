@@ -1,10 +1,10 @@
 /// Base class for calculator actions.
-sealed class CalculatorAction {
-  const CalculatorAction();
+sealed class Command {
+  const Command();
 }
 
 /// 0–9 digit input
-class Digit extends CalculatorAction {
+class Digit extends Command {
   final int value; // must be 0..9
   const Digit(this.value) : assert(value >= 0 && value <= 9);
 
@@ -15,7 +15,7 @@ class Digit extends CalculatorAction {
 }
 
 /// Decimal point input (".")
-class DecimalPoint extends CalculatorAction {
+class DecimalPoint extends Command {
   const DecimalPoint();
 
   @override
@@ -25,7 +25,7 @@ class DecimalPoint extends CalculatorAction {
 }
 
 /// Binary operators: +, -, ×, ÷
-class Operator extends CalculatorAction {
+class Operator extends Command {
   final OperatorType type;
   const Operator(this.type);
 
@@ -65,7 +65,7 @@ enum OperatorType {
 }
 
 /// Evaluate the current expression
-class Equals extends CalculatorAction {
+class Equals extends Command {
   const Equals();
   @override
   String toString() {
@@ -74,7 +74,7 @@ class Equals extends CalculatorAction {
 }
 
 /// Clear everything (AC)
-class ClearAll extends CalculatorAction {
+class ClearAll extends Command {
   const ClearAll();
   @override
   String toString() {
@@ -83,7 +83,7 @@ class ClearAll extends CalculatorAction {
 }
 
 /// Clear only the current entry (CE)
-class ClearEntry extends CalculatorAction {
+class ClearEntry extends Command {
   const ClearEntry();
   @override
   String toString() {
@@ -92,7 +92,7 @@ class ClearEntry extends CalculatorAction {
 }
 
 /// Delete last character of the current entry
-class Backspace extends CalculatorAction {
+class Backspace extends Command {
   const Backspace();
 
   @override
@@ -102,7 +102,7 @@ class Backspace extends CalculatorAction {
 }
 
 /// Toggle sign of the current entry (±)
-class ToggleSign extends CalculatorAction {
+class ToggleSign extends Command {
   const ToggleSign();
 
   @override
@@ -112,7 +112,7 @@ class ToggleSign extends CalculatorAction {
 }
 
 /// Convert current entry to a percentage (divide by 100)
-class Percent extends CalculatorAction {
+class Percent extends Command {
   const Percent();
 
   @override
@@ -122,7 +122,7 @@ class Percent extends CalculatorAction {
 }
 
 /// Calculate square root of the current entry
-class SquareRoot extends CalculatorAction {
+class SquareRoot extends Command {
   const SquareRoot();
 
   @override
@@ -132,7 +132,7 @@ class SquareRoot extends CalculatorAction {
 }
 
 /// Calculate square of the current entry
-class Square extends CalculatorAction {
+class Square extends Command {
   const Square();
 
   @override
@@ -142,7 +142,7 @@ class Square extends CalculatorAction {
 }
 
 /// Memory operations
-sealed class Memory extends CalculatorAction {
+sealed class Memory extends Command {
   const Memory();
 }
 
@@ -187,7 +187,7 @@ class MemoryClear extends Memory {
 }
 
 /// Power operation (x^y)
-class Power extends CalculatorAction {
+class Power extends Command {
   const Power();
 
   @override
@@ -197,7 +197,7 @@ class Power extends CalculatorAction {
 }
 
 /// Open parenthesis
-class OpenParenthesis extends CalculatorAction {
+class OpenParenthesis extends Command {
   const OpenParenthesis();
 
   @override
@@ -207,7 +207,7 @@ class OpenParenthesis extends CalculatorAction {
 }
 
 /// Close parenthesis
-class CloseParenthesis extends CalculatorAction {
+class CloseParenthesis extends Command {
   const CloseParenthesis();
 
   @override
@@ -217,7 +217,7 @@ class CloseParenthesis extends CalculatorAction {
 }
 
 /// Trigonometric operations
-sealed class Trigonometric extends CalculatorAction {
+sealed class Trigonometric extends Command {
   const Trigonometric();
 }
 
@@ -252,7 +252,7 @@ class Tangent extends Trigonometric {
 }
 
 /// Pi constant (π)
-class Pi extends CalculatorAction {
+class Pi extends Command {
   const Pi();
 
   @override
@@ -262,7 +262,7 @@ class Pi extends CalculatorAction {
 }
 
 /// Euler's number (e)
-class Euler extends CalculatorAction {
+class Euler extends Command {
   const Euler();
 
   @override

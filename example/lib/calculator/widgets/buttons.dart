@@ -1,4 +1,4 @@
-import 'package:example/calculator/action.dart';
+import 'package:example/calculator/engine/command.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
 
 class ButtonGrid extends StatelessWidget {
@@ -9,11 +9,11 @@ class ButtonGrid extends StatelessWidget {
     this.spacing = 4.0,
   });
 
-  final ValueChanged<CalculatorAction> onPressed;
-  final Map<CalculatorAction, SimulatedPressController> simulated;
+  final ValueChanged<Command> onPressed;
+  final Map<Command, SimulatedPressController> simulated;
   final double spacing;
 
-  static const rows = <List<CalculatorAction>>[
+  static const rows = <List<Command>>[
     [
       MemoryClear(),
       OpenParenthesis(),
@@ -97,7 +97,7 @@ class ButtonGrid extends StatelessWidget {
 class CalculatorButton extends StatelessWidget {
   const CalculatorButton(this.action, {super.key, required this.onPressed});
 
-  final CalculatorAction action;
+  final Command action;
   final VoidCallback onPressed;
   AnsiColor get color => switch (action) {
     ClearAll() => AnsiColor.red,

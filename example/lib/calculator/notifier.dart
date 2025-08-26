@@ -1,12 +1,12 @@
 import 'dart:math' show sqrt, pow, sin, cos, tan, pi, e;
 
-import 'package:example/calculator/action.dart';
+import 'package:example/calculator/engine/command.dart';
 import 'package:flutter/widgets.dart';
 
 /// A lightweight calculator engine that records every action and
 /// derives the current result from that history.
-class CalculatorEngine extends ChangeNotifier {
-  final List<CalculatorAction> _history = <CalculatorAction>[];
+class CalculatorNotifier extends ChangeNotifier {
+  final List<Command> _history = <Command>[];
 
   // Internal state derived by replaying history
   String _currentEntry = ""; // textual buffer for the number being typed
@@ -20,13 +20,13 @@ class CalculatorEngine extends ChangeNotifier {
   // --- Public API ---
 
   /// Append an action to the history and update the state by replaying it.
-  void execute(CalculatorAction action) {
+  void execute(Command action) {
     _apply(action, record: true);
     notifyListeners();
   }
 
   /// All actions so far (immutable copy)
-  List<CalculatorAction> get history => List.unmodifiable(_history);
+  List<Command> get history => List.unmodifiable(_history);
 
   /// The text to show on the calculator main display.
   /// If an error occurred, this returns a message like "Error" or "Division by zero".
@@ -97,7 +97,7 @@ class CalculatorEngine extends ChangeNotifier {
 
   // --- Internals ---
 
-  void _apply(CalculatorAction action, {bool record = false}) {
+  void _apply(Command action, {bool record = false}) {
     if (record) _history.add(action);
 
     if (action is ClearAll) {
