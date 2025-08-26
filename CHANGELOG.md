@@ -1,3 +1,7 @@
+## 0.1.4
+
+* Fixed status bar.
+
 ## 0.1.3
 
 * Fixed text input web plarform.

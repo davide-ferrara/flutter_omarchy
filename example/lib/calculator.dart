@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_omarchy/flutter_omarchy.dart';
 import 'dart:math' show sqrt, pow, sin, cos, tan, pi, e;
 
@@ -25,6 +26,7 @@ class CalculatorPage extends StatefulWidget {
 
 class _CalculatorPageState extends State<CalculatorPage> {
   final engine = CalculatorEngine();
+  final _focusNode = FocusNode();
 
   @override
   Widget build(BuildContext context) {
@@ -90,48 +92,187 @@ class _CalculatorPageState extends State<CalculatorPage> {
             );
           }
           final startCol = (layout.maxWidth > 800) ? 0 : 3;
-          return Padding(
-            padding: const EdgeInsets.all(14.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: Column(
-                    spacing: CalculatorApp.buttonSpacing,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Display(
-                        history: layout.maxHeight > 500
-                            ? engine.historyDisplay
-                            : null,
-                        display: engine.display,
-                      ),
-                      if (layout.maxWidth > 100 && layout.maxHeight > 220) ...[
-                        const SizedBox(height: 8),
-                        for (final row in rows)
-                          Expanded(
-                            child: Row(
-                              spacing: CalculatorApp.buttonSpacing,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: row.skip(startCol).map((action) {
-                                return CalculatorButton(
-                                  key: ValueKey(action),
-                                  action,
-                                  onPressed: () {
-                                    setState(() {
-                                      engine.execute(action);
-                                    });
-                                  },
-                                );
-                              }).toList(),
+          return Focus(
+            focusNode: _focusNode,
+            descendantsAreFocusable: false,
+            autofocus: true,
+            onKeyEvent: (node, event) {
+              if (event is! KeyDownEvent) return KeyEventResult.ignored;
+              if (event.logicalKey == LogicalKeyboardKey.digit0 ||
+                  event.logicalKey == LogicalKeyboardKey.numpad0) {
+                setState(() {
+                  engine.execute(const Digit(0));
+                });
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.digit1 ||
+                  event.logicalKey == LogicalKeyboardKey.numpad1) {
+                setState(() {
+                  engine.execute(const Digit(1));
+                });
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.digit2 ||
+                  event.logicalKey == LogicalKeyboardKey.numpad2) {
+                setState(() {
+                  engine.execute(const Digit(2));
+                });
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.digit3 ||
+                  event.logicalKey == LogicalKeyboardKey.numpad3) {
+                setState(() {
+                  engine.execute(const Digit(3));
+                });
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.digit4 ||
+                  event.logicalKey == LogicalKeyboardKey.numpad4) {
+                setState(() {
+                  engine.execute(const Digit(4));
+                });
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.digit5 ||
+                  event.logicalKey == LogicalKeyboardKey.numpad5) {
+                setState(() {
+                  engine.execute(const Digit(5));
+                });
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.digit6 ||
+                  event.logicalKey == LogicalKeyboardKey.numpad6) {
+                setState(() {
+                  engine.execute(const Digit(6));
+                });
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.digit7 ||
+                  event.logicalKey == LogicalKeyboardKey.numpad7) {
+                setState(() {
+                  engine.execute(const Digit(7));
+                });
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.digit8 ||
+                  event.logicalKey == LogicalKeyboardKey.numpad8) {
+                setState(() {
+                  engine.execute(const Digit(8));
+                });
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.digit9 ||
+                  event.logicalKey == LogicalKeyboardKey.numpad9) {
+                setState(() {
+                  engine.execute(const Digit(9));
+                });
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.add ||
+                  event.logicalKey == LogicalKeyboardKey.numpadAdd ||
+                  event.character == '+') {
+                setState(() {
+                  engine.execute(const Operator.plus());
+                });
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.asterisk ||
+                  event.logicalKey == LogicalKeyboardKey.numpadMultiply ||
+                  event.character == '*') {
+                setState(() {
+                  engine.execute(const Operator.multiply());
+                });
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.minus ||
+                  event.logicalKey == LogicalKeyboardKey.numpadSubtract ||
+                  event.character == '-') {
+                setState(() {
+                  engine.execute(const Operator.minus());
+                });
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.slash ||
+                  event.logicalKey == LogicalKeyboardKey.numpadDivide ||
+                  event.character == '/') {
+                setState(() {
+                  engine.execute(const Operator.divide());
+                });
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.equal ||
+                  event.logicalKey == LogicalKeyboardKey.enter ||
+                  event.logicalKey == LogicalKeyboardKey.numpadEnter ||
+                  event.logicalKey == LogicalKeyboardKey.numpadEqual ||
+                  event.character == '=') {
+                setState(() {
+                  engine.execute(const Equals());
+                });
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.period ||
+                  event.logicalKey == LogicalKeyboardKey.comma ||
+                  event.logicalKey == LogicalKeyboardKey.numpadDecimal ||
+                  event.character == '.' ||
+                  event.character == ',') {
+                setState(() {
+                  engine.execute(const DecimalPoint());
+                });
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.delete ||
+                  event.logicalKey == LogicalKeyboardKey.backspace) {
+                setState(() {
+                  engine.execute(const Backspace());
+                });
+                return KeyEventResult.handled;
+              }
+              return KeyEventResult.ignored;
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(14.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: Column(
+                      spacing: CalculatorApp.buttonSpacing,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Display(
+                          history: layout.maxHeight > 500
+                              ? engine.historyDisplay
+                              : null,
+                          display: engine.display,
+                        ),
+                        if (layout.maxWidth > 100 &&
+                            layout.maxHeight > 220) ...[
+                          const SizedBox(height: 8),
+                          for (final row in rows)
+                            Expanded(
+                              child: Row(
+                                spacing: CalculatorApp.buttonSpacing,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: row.skip(startCol).map((action) {
+                                  return CalculatorButton(
+                                    key: ValueKey(action),
+                                    action,
+                                    onPressed: () {
+                                      setState(() {
+                                        engine.execute(action);
+                                      });
+                                    },
+                                  );
+                                }).toList(),
+                              ),
                             ),
-                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -556,13 +697,13 @@ class CalculatorEngine {
   /// Shows the current result of the calculation, ignoring the last operator if present.
   String get display {
     if (_error != null) return _error!;
-    
+
     // If we're currently entering a number, show that
     if (_currentEntry.isNotEmpty) return _currentEntry;
-    
+
     // Calculate the current result (this will ignore the last operator if present)
     final result = _evaluateTokens();
-    
+
     // Format and return the result
     return _formatNumber(result);
   }
@@ -921,15 +1062,15 @@ class CalculatorEngine {
   double _evaluateTokens() {
     // If tokens is empty, return 0
     if (_tokens.isEmpty) return 0.0;
-    
+
     // Create a copy of tokens to work with
     final tokensCopy = List<_Token>.from(_tokens);
-    
+
     // If the last token is an operator, remove it for intermediate calculation
     if (tokensCopy.isNotEmpty && tokensCopy.last is _OpTok) {
       tokensCopy.removeLast();
     }
-    
+
     // If after removing the last operator we have no tokens, return 0
     if (tokensCopy.isEmpty) return 0.0;
     final rpn = <_Token>[];
@@ -984,10 +1125,10 @@ class CalculatorEngine {
         rpn.add(op);
       }
     }
-    
+
     // If we have no tokens in RPN (e.g., only open parentheses), return 0
     if (rpn.isEmpty) return 0.0;
-    
+
     // If we have only one token and it's a number, return it directly
     if (rpn.length == 1 && rpn.first is _NumberTok) {
       return (rpn.first as _NumberTok).value;
